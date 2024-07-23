@@ -3,18 +3,18 @@
 
 #include "HitState.h"
 
-void UHitState::Enter(MyCharacter* Character)
+void UHitState::Enter(ABaseCharacter* Character)
 {
 }
 
-void UHitState::Exit(MyCharacter* Character)
+void UHitState::Exit(ABaseCharacter* Character)
 {
 }
 
-void UHitState::Update(MyCharacter* Character, float DeltaTime)
+void UHitState::Update(ABaseCharacter* Character, float DeltaTime)
 {
 }
 
-void UHitState::HandleInput(MyCharacter* Character, FKey Key)
+void UHitState::HandleInput(ABaseCharacter* Character, FKey Key)
 {
 }

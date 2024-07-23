@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "StateManager.h"
+#include "BaseState.h"
 #include "BaseCharacter.generated.h"
 
 class UInputMappingContext;
@@ -42,6 +44,11 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	TScriptInterface<IBaseState> CurrentState;
+
+	UPROPERTY()
+	UStateManager* StateManager;
 
 protected:
 

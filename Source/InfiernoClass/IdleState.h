@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "BaseState.h"
-#include "HitState.generated.h"
+#include "IdleState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class INFIERNOCLASS_API UHitState : public UObject, public IBaseState
+class INFIERNOCLASS_API UIdleState : public UObject, public IBaseState
 {
 	GENERATED_BODY()
-    
+
 public:
 
     virtual void Enter(ABaseCharacter* Character) override;
