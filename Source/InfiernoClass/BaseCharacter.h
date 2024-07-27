@@ -45,11 +45,16 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	float GetSpeed() const;
+
 	TScriptInterface<IBaseState> CurrentState;
 
 	UPROPERTY()
 	UStateManager* StateManager;
 
+	UPROPERTY(EditAnywhere, Category = "Animation");
+	float Speed;
 protected:
 
 	void MoveForward(const FInputActionValue& Value);
