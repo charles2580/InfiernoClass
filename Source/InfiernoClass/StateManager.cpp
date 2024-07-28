@@ -16,8 +16,9 @@ void UStateManager::ChangeState(TSubclassOf<UObject> NewStateClass)
     }
 
     player->CurrentState = NewObject<UObject>(player, NewStateClass);
-    if (player->CurrentState)
+    IBaseState* newState = Cast<IBaseState>(player->CurrentState.GetObject());
+    if (newState)
     {
-        player->CurrentState->Enter(player);
+        newState->Enter(player);
     }
 }

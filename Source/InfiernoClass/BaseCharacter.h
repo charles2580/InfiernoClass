@@ -12,6 +12,16 @@
 class UInputMappingContext;
 class UInputAction;
 
+UENUM(BlueprintType)
+enum class ECharacterState : uint8
+{
+	Idle,
+	Walking,
+	Attack,
+	Hit,
+	Block
+};
+
 
 UCLASS()
 class INFIERNOCLASS_API ABaseCharacter : public ACharacter
@@ -45,6 +55,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void RequestStateChange(ECharacterState NewState);
+
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	float GetSpeed() const;
 
@@ -60,5 +72,6 @@ protected:
 	void MoveForward(const FInputActionValue& Value);
 	void JumpAction(const FInputActionValue& Value);
 	void CrouchAction(const FInputActionValue& Value);
-
+	void MoveStarted(const FInputActionValue& Value);
+	void MoveCompleted(const FInputActionValue& Value);
 };
