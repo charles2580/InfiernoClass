@@ -16,6 +16,7 @@ ABaseCharacter::ABaseCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
     Speed = 0;
+    Block = false;
     StateManager = CreateDefaultSubobject<UStateManager>(TEXT("StateManager"));
 }
 
@@ -89,6 +90,11 @@ float ABaseCharacter::GetSpeed() const
     return Speed;
 }
 
+bool ABaseCharacter::GetBlock() const
+{
+    return Block;
+}
+
 void ABaseCharacter::MoveForward(const FInputActionValue& Value)
 {
     float MovementValue = Value.Get<float>();
@@ -100,10 +106,10 @@ void ABaseCharacter::MoveForward(const FInputActionValue& Value)
             Speed = GetVelocity().Size();
             Speed = (MovementValue < 0) ? -Speed : Speed; // 방향에 따라 속도 설정
         }
-        //if (MovementValue < 0)
-        //{
-        //    RequestStateChange(ECharacterState::Walking);
-        //}
+        if (MovementValue < 0)
+        {
+            Block = true;
+        }
         //else
         //{
         //    RequestStateChange(ECharacterState::Block);

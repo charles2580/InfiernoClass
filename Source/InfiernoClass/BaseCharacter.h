@@ -60,6 +60,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	float GetSpeed() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	bool GetBlock() const;
+
 	TScriptInterface<IBaseState> CurrentState;
 
 	UPROPERTY()
@@ -67,6 +70,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation");
 	float Speed;
+
+	UPROPERTY(EditAnywhere, Category = "Animation");
+	bool Block;
 protected:
 
 	void MoveForward(const FInputActionValue& Value);
