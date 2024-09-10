@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "PlayerAnimInstance.h"
 #include "StateManager.h"
 #include "BaseState.h"
 #include "BaseCharacter.generated.h"
@@ -56,10 +58,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	void RequestStateChange(ECharacterState NewState);
-
+	virtual void OnLanded(const FHitResult& Hit);
+	
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	float GetSpeed() const;
-
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	bool GetBlock() const;
 
@@ -70,9 +72,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation");
 	float Speed;
-
 	UPROPERTY(EditAnywhere, Category = "Animation");
 	bool Block;
+
 protected:
 
 	void MoveForward(const FInputActionValue& Value);
@@ -80,4 +82,8 @@ protected:
 	void CrouchAction(const FInputActionValue& Value);
 	void MoveStarted(const FInputActionValue& Value);
 	void MoveCompleted(const FInputActionValue& Value);
+
+private:
+	UCharacterMovementComponent* movementComponent;
+	UPlayerAnimInstance* animInstance;
 };

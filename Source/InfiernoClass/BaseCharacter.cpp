@@ -18,6 +18,7 @@ ABaseCharacter::ABaseCharacter()
     Speed = 0;
     Block = false;
     StateManager = CreateDefaultSubobject<UStateManager>(TEXT("StateManager"));
+    movementComponent = GetCharacterMovement();
 }
 
 // Called when the game starts or when spawned
@@ -32,18 +33,19 @@ void ABaseCharacter::BeginPlay()
             Subsystem->AddMappingContext(PlayerMappingContext, 0);
         }
     }
-    StateManager->Initialize(this);
-    StateManager->ChangeState(UIdleState::StaticClass());
+    //StateManager->Initialize(this);
+    //StateManager->ChangeState(UIdleState::StaticClass());
+    animInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
 // Called every frame
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-    if (CurrentState)
-    {
-        CurrentState->Update(this, DeltaTime);
-    }
+    //if (CurrentState)
+    //{
+    //    CurrentState->Update(this, DeltaTime);
+    //}
 }
 
 // Called to bind functionality to input
@@ -97,23 +99,27 @@ bool ABaseCharacter::GetBlock() const
 
 void ABaseCharacter::MoveForward(const FInputActionValue& Value)
 {
+    if (movementComponent->IsFalling())
+    {
+        return;
+    }
+
     float MovementValue = Value.Get<float>();
     if (MovementValue != 0.0f)
     {
         AddMovementInput(GetActorForwardVector(), MovementValue);
-        if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+        if (animInstance)
         {
-            Speed = GetVelocity().Size();
-            Speed = (MovementValue < 0) ? -Speed : Speed; // 방향에 따라 속도 설정
-        }
-        if (MovementValue < 0)
-        {
-            Block = true;
+            animInstance->Speed = (MovementValue < 0) ? -animInstance->Speed : animInstance->Speed; // 방향에 따라 속도 설정
         }
         //else
         //{
         //    RequestStateChange(ECharacterState::Block);
         //}
+    }
+    if (MovementValue < 0)
+    {
+        animInstance->bIsBlocking = true;
     }
 }
 
@@ -122,10 +128,14 @@ void ABaseCharacter::JumpAction(const FInputActionValue& Value)
     if (Value.Get<bool>())
     {
         Jump();
+        animInstance->bIsJumping = true;
+        movementComponent->AirControl = 0.0f;
     }
     else
     {
         StopJumping();
+        animInstance->bIsJumping = false;
+        movementComponent->AirControl = 0.5f;
     }
 }
 
@@ -144,17 +154,24 @@ void ABaseCharacter::CrouchAction(const FInputActionValue& Value)
 void ABaseCharacter::MoveStarted(const FInputActionValue& Value)
 {
     float MovementValue = Value.Get<float>();
-    if (MovementValue != 0.0f)
+   /* if (MovementValue != 0.0f)
     {
         RequestStateChange(ECharacterState::Walking);
-    }
+    }*/
 }
 
 void ABaseCharacter::MoveCompleted(const FInputActionValue& Value)
 {
     float MovementValue = Value.Get<float>();
-    if (MovementValue != 0.0f) {
-        RequestStateChange(ECharacterState::Idle);
+
+}
+
+void ABaseCharacter::OnLanded(const FHitResult& Hit)
+{
+    Super::OnLanded(Hit);
+    if (animInstance)
+    {
+        animInstance->bIsJumping = false;
     }
 }
 
