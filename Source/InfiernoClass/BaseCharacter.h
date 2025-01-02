@@ -24,6 +24,34 @@ enum class ECharacterState : uint8
 	Block
 };
 
+USTRUCT(BlueprintType)
+struct FInputInfo
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	FString inputName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	float timeStamp;
+};
+
+USTRUCT(BlueprintType)
+struct FCommand
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	FString name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TArray<FString> inputs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	bool hasUsedCommand;
+};
 
 UCLASS()
 class INFIERNOCLASS_API ABaseCharacter : public ACharacter
@@ -37,7 +65,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputMappingContext* PlayerMappingContext;
 
@@ -50,6 +78,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	class UInputAction* IA_Crouch;
 
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
+	UAnimMontage* JumpMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
+	UAnimMontage* Combo1Montage;
+	
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -58,8 +93,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	void RequestStateChange(ECharacterState NewState);
-	virtual void OnLanded(const FHitResult& Hit);
-	
+	virtual void Landed(const FHitResult& Hit) override;
+
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	float GetSpeed() const;
 	UFUNCTION(BlueprintCallable, Category = "Animation")
@@ -77,11 +112,32 @@ public:
 
 protected:
 
+	UFUNCTION(BlueprintCallable)
+	void AddInputToInputBuffer(FInputInfo _inputinfo);
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveInputFromInputBuffer();
+
+	UFUNCTION(BlueprintCallable)
+		void CheckInputBufferForCommand();
+	
+	UFUNCTION(BlueprintCallable)
+		void StartCommand(FString _commandName);
+
 	void MoveForward(const FInputActionValue& Value);
 	void JumpAction(const FInputActionValue& Value);
 	void CrouchAction(const FInputActionValue& Value);
 	void MoveStarted(const FInputActionValue& Value);
 	void MoveCompleted(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TArray<FInputInfo> inputBuffer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TArray<FCommand> characterCommands;
+
+	FTimerHandle inputBufferTimerHandle;
+	float removeInputFromBufferTime;
 
 private:
 	UCharacterMovementComponent* movementComponent;

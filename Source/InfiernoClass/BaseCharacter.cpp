@@ -19,6 +19,20 @@ ABaseCharacter::ABaseCharacter()
     Block = false;
     StateManager = CreateDefaultSubobject<UStateManager>(TEXT("StateManager"));
     movementComponent = GetCharacterMovement();
+    removeInputFromBufferTime = 1.0f;
+    characterCommands.SetNum(2);
+
+    characterCommands[0].name = "Command #1";
+    characterCommands[0].inputs.Add("A");
+    characterCommands[0].inputs.Add("B");
+    characterCommands[0].inputs.Add("C");
+    characterCommands[0].hasUsedCommand = false;
+
+    characterCommands[1].name = "Command #2";
+    characterCommands[1].inputs.Add("A");
+    characterCommands[1].inputs.Add("B");
+    characterCommands[1].inputs.Add("D");
+    characterCommands[1].hasUsedCommand = false;
 }
 
 // Called when the game starts or when spawned
@@ -30,7 +44,7 @@ void ABaseCharacter::BeginPlay()
         UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
         if (Subsystem)
         {
-            Subsystem->AddMappingContext(PlayerMappingContext, 0);
+            Subsystem->AddMappingContext(PlayerMappingContext, 1);
         }
     }
     //StateManager->Initialize(this);
@@ -60,6 +74,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
         EnhancedInputComponent->BindAction(IA_MoveForward, ETriggerEvent::Triggered, this, &ABaseCharacter::MoveForward);
         EnhancedInputComponent->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ABaseCharacter::JumpAction);
         EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Triggered, this, &ABaseCharacter::CrouchAction);
+     
     }
 
 }
@@ -97,6 +112,68 @@ bool ABaseCharacter::GetBlock() const
     return Block;
 }
 
+void ABaseCharacter::AddInputToInputBuffer(FInputInfo _inputinfo)
+{
+    inputBuffer.Add(_inputinfo);
+    CheckInputBufferForCommand();
+}
+
+void ABaseCharacter::RemoveInputFromInputBuffer()
+{
+}
+
+void ABaseCharacter::CheckInputBufferForCommand()
+{
+    int correctSequenceCounter = 0;
+
+    for (auto currentCommand : characterCommands)
+    {
+        for (int commandInput = 0; commandInput < currentCommand.inputs.Num(); ++commandInput)
+        {
+            for (int input = 0; input < inputBuffer.Num(); ++input)
+            {
+                if (input + correctSequenceCounter < inputBuffer.Num())
+                {
+                    if (inputBuffer[input + correctSequenceCounter].inputName.Compare(currentCommand.inputs[commandInput]) == 0)
+                    {
+                        //UE_LOG(LogTemp, Warning, TEXT("The player added another input to the command sequence"));
+                        ++correctSequenceCounter;
+
+                        if (correctSequenceCounter == currentCommand.inputs.Num())
+                        {
+                            StartCommand(currentCommand.name);
+                        }
+
+                        break;
+                    }
+                    else
+                    {
+                        //UE_LOG(LogTemp, Warning, TEXT("The player borke the command sequence."));
+                        correctSequenceCounter = 0;
+                    }
+                }
+                else
+                {
+                    //UE_LOG(LogTemp, Warning, TEXT("The player is not yet finished with the command sequence."));
+                    correctSequenceCounter = 0;
+                }
+            }
+        }
+    }
+}
+
+void ABaseCharacter::StartCommand(FString _commandName)
+{
+    for (int currentCommand = 0; currentCommand < characterCommands.Num(); ++currentCommand)
+    {
+        if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *_commandName);
+            characterCommands[currentCommand].hasUsedCommand = true;
+        }
+    }
+}
+
 void ABaseCharacter::MoveForward(const FInputActionValue& Value)
 {
     if (movementComponent->IsFalling())
@@ -107,7 +184,7 @@ void ABaseCharacter::MoveForward(const FInputActionValue& Value)
     float MovementValue = Value.Get<float>();
     if (MovementValue != 0.0f)
     {
-        AddMovementInput(GetActorForwardVector(), MovementValue);
+        AddMovementInput(FVector(1.0f, 0.0f, 0.0f), MovementValue);
         if (animInstance)
         {
             animInstance->Speed = (MovementValue < 0) ? -animInstance->Speed : animInstance->Speed; // 방향에 따라 속도 설정
@@ -125,17 +202,17 @@ void ABaseCharacter::MoveForward(const FInputActionValue& Value)
 
 void ABaseCharacter::JumpAction(const FInputActionValue& Value)
 {
-    if (Value.Get<bool>())
+    UE_LOG(LogTemp, Warning, TEXT("JUMP key was pressed!"));
+    if (Value.Get<bool>()&& !animInstance->bIsJumping)
     {
-        Jump();
-        animInstance->bIsJumping = true;
         movementComponent->AirControl = 0.0f;
-    }
-    else
-    {
-        StopJumping();
-        animInstance->bIsJumping = false;
-        movementComponent->AirControl = 0.5f;
+        movementComponent->FallingLateralFriction = 0.0f;
+        movementComponent->MaxAcceleration = 5000.0f;
+        movementComponent->MaxWalkSpeedCrouched = 600.0f;
+        if (JumpMontage && animInstance)
+        {
+            animInstance->Montage_Play(JumpMontage);
+        }
     }
 }
 
@@ -150,6 +227,7 @@ void ABaseCharacter::CrouchAction(const FInputActionValue& Value)
         UnCrouch();
     }
 }
+
 
 void ABaseCharacter::MoveStarted(const FInputActionValue& Value)
 {
@@ -166,12 +244,12 @@ void ABaseCharacter::MoveCompleted(const FInputActionValue& Value)
 
 }
 
-void ABaseCharacter::OnLanded(const FHitResult& Hit)
+void ABaseCharacter::Landed(const FHitResult& Hit)
 {
     Super::OnLanded(Hit);
     if (animInstance)
     {
         animInstance->bIsJumping = false;
+        movementComponent->AirControl = 1.0f;
     }
 }
-

@@ -16,3 +16,19 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		
 	}
 }
+
+void UPlayerAnimInstance::AnimNotify_Jump()
+{
+	Pawn = TryGetPawnOwner();
+	ACharacter* Character = Cast<ACharacter>(Pawn);
+	if (Character)
+	{
+		Character->Jump();
+		bIsJumping = true;
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_JumpEnd()
+{
+	UE_LOG(LogTemp, Log, TEXT("Jump End"));
+}

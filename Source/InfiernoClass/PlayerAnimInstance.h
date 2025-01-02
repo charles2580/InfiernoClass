@@ -29,5 +29,9 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 private:
+	UFUNCTION(Category = "Animation Notifies")
+	void AnimNotify_Jump();
+	UFUNCTION(Category = "Animation Notifies")
+	void AnimNotify_JumpEnd();
 	APawn* Pawn;
 };
