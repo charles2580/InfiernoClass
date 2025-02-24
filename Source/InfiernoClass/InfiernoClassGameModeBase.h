@@ -16,6 +16,14 @@ class INFIERNOCLASS_API AInfiernoClassGameModeBase : public AGameModeBase
 public:
 	AInfiernoClassGameModeBase();
 
+	virtual void StartPlay() override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Classes")
+		TSubclassOf<ABaseCharacter> MonkeyPawnClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Classes")
+		TSubclassOf<ABaseCharacter> BullPawnClass;
+
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Player References");
 	ABaseCharacter* Player1;
 

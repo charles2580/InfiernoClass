@@ -1,0 +1,12 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-GameViewportLocalMultiplayer.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\Users\kbj56\OneDrive\InfiernoClass\Intermediate\Build\Win64\x64\InfiernoClassEditor\Development\UnrealEd\SharedPCH.UnrealEd.Cpp17.InclOrderUnreal5_1.h.obj"
+"C:\Users\kbj56\OneDrive\InfiernoClass\Plugins\GameViewportLocalMultiplayer\GameViewportLocalMultiplayer\Intermediate\Build\Win64\x64\UnrealEditor\Development\GameViewportLocalMultiplayer\Module.GameViewportLocalMultiplayer.cpp.obj"
+"C:\Users\kbj56\OneDrive\InfiernoClass\Plugins\GameViewportLocalMultiplayer\GameViewportLocalMultiplayer\Intermediate\Build\Win64\x64\UnrealEditor\Development\GameViewportLocalMultiplayer\Default.rc2.res"
+/OUT:"C:\Users\kbj56\OneDrive\InfiernoClass\Plugins\GameViewportLocalMultiplayer\GameViewportLocalMultiplayer\Intermediate\Build\Win64\x64\UnrealEditor\Development\GameViewportLocalMultiplayer\UnrealEditor-GameViewportLocalMultiplayer.lib"

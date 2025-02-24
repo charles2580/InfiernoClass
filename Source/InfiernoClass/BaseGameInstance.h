@@ -9,7 +9,6 @@
 UENUM(BlueprintType)
 enum class ECharacterClass : uint8
 {
-	Default	UMETA(DisplayName = "Default"),
 	Monkey	UMETA(DisplayName = "Monkey"),
 	Bull	UMETA(DisplayName = "Bull")
 };

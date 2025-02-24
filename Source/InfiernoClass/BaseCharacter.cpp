@@ -39,14 +39,7 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-    if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-    {
-        UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
-        if (Subsystem)
-        {
-            Subsystem->AddMappingContext(PlayerMappingContext, 1);
-        }
-    }
+
     //StateManager->Initialize(this);
     //StateManager->ChangeState(UIdleState::StaticClass());
     animInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
@@ -63,21 +56,21 @@ void ABaseCharacter::Tick(float DeltaTime)
 }
 
 // Called to bind functionality to input
-void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-    if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-    {
-        EnhancedInputComponent->BindAction(IA_MoveForward, ETriggerEvent::Started, this, &ABaseCharacter::MoveStarted);
-        EnhancedInputComponent->BindAction(IA_MoveForward, ETriggerEvent::Completed, this, &ABaseCharacter::MoveCompleted);
-        EnhancedInputComponent->BindAction(IA_MoveForward, ETriggerEvent::Triggered, this, &ABaseCharacter::MoveForward);
-        EnhancedInputComponent->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ABaseCharacter::JumpAction);
-        EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Triggered, this, &ABaseCharacter::CrouchAction);
-     
-    }
-
-}
+//void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+//{
+//	Super::SetupPlayerInputComponent(PlayerInputComponent);
+//
+//    if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+//    {
+//        EnhancedInputComponent->BindAction(IA_MoveForward, ETriggerEvent::Started, this, &ABaseCharacter::MoveStarted);
+//        EnhancedInputComponent->BindAction(IA_MoveForward, ETriggerEvent::Completed, this, &ABaseCharacter::MoveCompleted);
+//        EnhancedInputComponent->BindAction(IA_MoveForward, ETriggerEvent::Triggered, this, &ABaseCharacter::MoveAction);
+//        EnhancedInputComponent->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ABaseCharacter::JumpAction);
+//        EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Triggered, this, &ABaseCharacter::CrouchAction);
+//     
+//    }
+//
+//}
 
 void ABaseCharacter::RequestStateChange(ECharacterState NewState)
 {
@@ -174,29 +167,27 @@ void ABaseCharacter::StartCommand(FString _commandName)
     }
 }
 
-void ABaseCharacter::MoveForward(const FInputActionValue& Value)
+void ABaseCharacter::MoveAction(const FInputActionValue& Value)
 {
-    if (movementComponent->IsFalling())
+    FVector2D StickInput = Value.Get<FVector2D>();
+
+    const float HorizontalDeadzone = 0.2f;
+    const float JumpThreshold = 0.8f;
+
+    if (FMath::Abs(StickInput.X) > HorizontalDeadzone)
     {
-        return;
+        AddMovementInput(GetActorForwardVector(), StickInput.X);
     }
 
-    float MovementValue = Value.Get<float>();
-    if (MovementValue != 0.0f)
+    if (StickInput.Y >= JumpThreshold)
     {
-        AddMovementInput(FVector(1.0f, 0.0f, 0.0f), MovementValue);
-        if (animInstance)
+        if (!animInstance->bIsJumping)
         {
-            animInstance->Speed = (MovementValue < 0) ? -animInstance->Speed : animInstance->Speed; // 방향에 따라 속도 설정
+            if (JumpMontage)
+            {
+                animInstance->Montage_Play(JumpMontage);
+            }
         }
-        //else
-        //{
-        //    RequestStateChange(ECharacterState::Block);
-        //}
-    }
-    if (MovementValue < 0)
-    {
-        animInstance->bIsBlocking = true;
     }
 }
 

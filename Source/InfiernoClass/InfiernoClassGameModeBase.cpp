@@ -1,7 +1,12 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
-
-
 #include "InfiernoClassGameModeBase.h"
+#include "BaseCharacter.h"
+#include "Engine/LocalPlayer.h"
+#include "Engine/World.h"
+#include "UObject/ConstructorHelpers.h"
+#include "BaseGameInstance.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
 
 AInfiernoClassGameModeBase::AInfiernoClassGameModeBase()
 {
@@ -10,4 +15,147 @@ AInfiernoClassGameModeBase::AInfiernoClassGameModeBase()
 	{
 		DefaultPawnClass = DefaultPawnBPClass.Class;
 	}
+}
+
+void AInfiernoClassGameModeBase::StartPlay()
+{
+    Super::StartPlay();
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        return;
+    }
+
+    // --- 1. GameInstance에서 선택된 캐릭터 클래스를 읽어옴 ---
+    UBaseGameInstance* GI = Cast<UBaseGameInstance>(GetGameInstance());
+    if (!GI)
+    {
+        UE_LOG(LogTemp, Log, TEXT("GameInstance casting Fail"));
+        return;
+    }
+
+    TSubclassOf<ABaseCharacter> SelectedPawnClass = nullptr;
+    if (GI->characterClass == ECharacterClass::Monkey)
+    {
+        SelectedPawnClass = MonkeyPawnClass;
+        UE_LOG(LogTemp, Log, TEXT("Selected Character Class: Monkey"));
+    }
+    else if (GI->characterClass == ECharacterClass::Bull)
+    {
+        SelectedPawnClass = BullPawnClass;
+        UE_LOG(LogTemp, Log, TEXT("Selected Character Class: Bull"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Non Defined Character"));
+        return;
+    }
+
+    if (!SelectedPawnClass)
+    {
+        UE_LOG(LogTemp, Log, TEXT("There is No SelectedCharacterClass"));
+        return;
+    }
+
+    // --- 2. Player 0 생성 및 Pawn 스폰/Possess ---
+    APlayerController* PC0 = World->GetFirstPlayerController();
+    if (PC0)
+    {
+        FVector SpawnLocation0(-200.f, 0.f, 100.f); // 원하는 위치로 조정
+        FRotator SpawnRotation0 = FRotator::ZeroRotator;
+        FTransform SpawnTransform0(SpawnRotation0, SpawnLocation0, FVector(1.0f));
+
+        ABaseCharacter* Pawn0 = World->SpawnActorDeferred<ABaseCharacter>(SelectedPawnClass, SpawnTransform0);
+        if (Pawn0)
+        {
+            Pawn0->AutoPossessPlayer = EAutoReceiveInput::Player0;
+            Pawn0->FinishSpawning(SpawnTransform0);
+
+            // Possess()를 0.1초 지연 후 호출
+            FTimerHandle TimerHandle0;
+            World->GetTimerManager().SetTimer(TimerHandle0, [PC0, Pawn0]()
+                {
+                    PC0->Possess(Pawn0);
+                    UE_LOG(LogTemp, Log, TEXT("Player 0 Pawn Spawn and Possess (Delayed) Success"));
+                }, 0.1f, false);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Player 0 Pawn Spawn Failed."));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Player 0 Controller Can't Find."));
+    }
+
+    // --- 3. Player 1 (추가 플레이어) 생성 ---
+    if (GetNumPlayers() < 2)
+    {
+        UGameInstance* GameInst = GetGameInstance();
+        if (GameInst)
+        {
+            FString PlayerName = FString(TEXT("Player2"));
+            ULocalPlayer* NewLocalPlayer = GameInst->CreateLocalPlayer(1, PlayerName, true);
+            if (NewLocalPlayer)
+            {
+                UE_LOG(LogTemp, Log, TEXT("Second Local Player Spawned."));
+            }
+            else
+            {
+                UE_LOG(LogTemp, Log, TEXT("Second Local Player Spawn Failed."));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Log, TEXT("GameInstance does not exist."));
+        }
+    }
+
+    // --- 4. Player 1의 PlayerController 및 Pawn 스폰/Possess ---
+    APlayerController* PC1 = nullptr;
+    for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+    {
+        APlayerController* PC = It->Get();
+        if (PC && PC != World->GetFirstPlayerController())
+        {
+            PC1 = PC;
+            break;
+        }
+    }
+
+    if (PC1)
+    {
+        FVector SpawnLocation1(200.f, 0.f, 100.f); // 두 번째 Pawn의 위치
+        FRotator SpawnRotation1 = FRotator::ZeroRotator;
+        FTransform SpawnTransform1(SpawnRotation1, SpawnLocation1, FVector(1.0f));
+
+        ABaseCharacter* Pawn1 = World->SpawnActorDeferred<ABaseCharacter>(SelectedPawnClass, SpawnTransform1);
+        if (Pawn1)
+        {
+            Pawn1->AutoPossessPlayer = EAutoReceiveInput::Player1;
+            Pawn1->FinishSpawning(SpawnTransform1);
+
+            // Possess()를 0.1초 지연 후 호출
+            FTimerHandle TimerHandle1;
+            World->GetTimerManager().SetTimer(TimerHandle1, [PC1, Pawn1]()
+                {
+                    PC1->Possess(Pawn1);
+                    // 필요시 입력 모드도 재설정
+                    FInputModeGameAndUI InputMode;
+                    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+                    PC1->SetInputMode(InputMode);
+                    UE_LOG(LogTemp, Log, TEXT("Player 1 Pawn Spawn and Possess (Delayed) Success"));
+                }, 0.1f, false);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Player 1 Pawn Spawn Failed."));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Player 1 Controller does not Possess."));
+    }
 }

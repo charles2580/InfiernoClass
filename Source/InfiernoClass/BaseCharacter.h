@@ -67,9 +67,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputMappingContext* PlayerMappingContext;
-
-	UPROPERTY(EditAnywhere, Category = "Input")
 	class UInputAction* IA_MoveForward;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -84,16 +81,21 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
 	UAnimMontage* Combo1Montage;
 	
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	//virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	void RequestStateChange(ECharacterState NewState);
 	virtual void Landed(const FHitResult& Hit) override;
+
+	void MoveAction(const FInputActionValue& Value);
+	void JumpAction(const FInputActionValue& Value);
+	void CrouchAction(const FInputActionValue& Value);
+	void MoveStarted(const FInputActionValue& Value);
+	void MoveCompleted(const FInputActionValue& Value);
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	float GetSpeed() const;
@@ -124,11 +126,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 		void StartCommand(FString _commandName);
 
-	void MoveForward(const FInputActionValue& Value);
-	void JumpAction(const FInputActionValue& Value);
-	void CrouchAction(const FInputActionValue& Value);
-	void MoveStarted(const FInputActionValue& Value);
-	void MoveCompleted(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TArray<FInputInfo> inputBuffer;
