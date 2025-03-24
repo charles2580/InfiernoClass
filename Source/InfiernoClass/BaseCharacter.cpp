@@ -9,6 +9,7 @@
 #include "WalkState.h"
 #include "AttackState.h"
 #include "HitState.h"
+#include "MotionWarpingComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -19,20 +20,28 @@ ABaseCharacter::ABaseCharacter()
     Block = false;
     StateManager = CreateDefaultSubobject<UStateManager>(TEXT("StateManager"));
     movementComponent = GetCharacterMovement();
+    
+    MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"));
+
+    HitboxComponent = CreateDefaultSubobject<UHitboxComponent>(TEXT("HitboxComponent"));
+    HitboxComponent->SetupAttachment(GetMesh());
+
     removeInputFromBufferTime = 1.0f;
     characterCommands.SetNum(2);
 
     characterCommands[0].name = "Command #1";
     characterCommands[0].inputs.Add("A");
     characterCommands[0].inputs.Add("B");
-    characterCommands[0].inputs.Add("C");
+    characterCommands[0].inputs.Add("X");
     characterCommands[0].hasUsedCommand = false;
+    characterCommands[0].ComboAttackMontage = Combo1Montage;
 
     characterCommands[1].name = "Command #2";
     characterCommands[1].inputs.Add("A");
     characterCommands[1].inputs.Add("B");
-    characterCommands[1].inputs.Add("D");
+    characterCommands[1].inputs.Add("Y");
     characterCommands[1].hasUsedCommand = false;
+    characterCommands[1].ComboAttackMontage = Combo2Montage;
 }
 
 // Called when the game starts or when spawned
@@ -105,6 +114,28 @@ bool ABaseCharacter::GetBlock() const
     return Block;
 }
 
+void ABaseCharacter::SetWarpTarget(FName TargetName, const FTransform& TargetTransform)
+{
+    if (MotionWarpingComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("The MotionWarping is Successed."));
+        MotionWarpingComponent->AddOrUpdateWarpTargetFromTransform(TargetName, TargetTransform);
+    }
+}
+
+void ABaseCharacter::ClearWarpTarget(FName TargetName)
+{
+    if (MotionWarpingComponent)
+    {
+        MotionWarpingComponent->RemoveWarpTarget(TargetName);
+    }
+}
+
+void ABaseCharacter::ApplyDamage(float Damage)
+{
+    UE_LOG(LogTemp, Warning, TEXT("%s took %.1f damage!"), *GetName(), Damage);
+}
+
 void ABaseCharacter::AddInputToInputBuffer(FInputInfo _inputinfo)
 {
     inputBuffer.Add(_inputinfo);
@@ -163,6 +194,7 @@ void ABaseCharacter::StartCommand(FString _commandName)
         {
             UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *_commandName);
             characterCommands[currentCommand].hasUsedCommand = true;
+            PlayAnimMontage(characterCommands[currentCommand].ComboAttackMontage);
         }
     }
 }
@@ -188,6 +220,14 @@ void ABaseCharacter::MoveAction(const FInputActionValue& Value)
                 animInstance->Montage_Play(JumpMontage);
             }
         }
+    }
+}
+
+void ABaseCharacter::AttackAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        PlayAnimMontage(Combo1Montage);
     }
 }
 
@@ -219,7 +259,6 @@ void ABaseCharacter::CrouchAction(const FInputActionValue& Value)
     }
 }
 
-
 void ABaseCharacter::MoveStarted(const FInputActionValue& Value)
 {
     float MovementValue = Value.Get<float>();
@@ -233,6 +272,102 @@ void ABaseCharacter::MoveCompleted(const FInputActionValue& Value)
 {
     float MovementValue = Value.Get<float>();
 
+}
+
+void ABaseCharacter::GamePadFaceButtonBottomAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        FInputInfo inputinfo;
+        inputinfo.inputName = "A";
+        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+        AddInputToInputBuffer(inputinfo);
+        if (animInstance && L_PunchMontage)
+        {
+            animInstance->Montage_Play(L_PunchMontage);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("GamePad A is not Pressed"));
+    }
+}
+
+void ABaseCharacter::GamePadFaceButtonRightAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        FInputInfo inputinfo;
+        inputinfo.inputName = "B";
+        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+        AddInputToInputBuffer(inputinfo);
+    }
+}
+
+void ABaseCharacter::GamePadFaceButtonLeftAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        FInputInfo inputinfo;
+        inputinfo.inputName = "X";
+        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+        AddInputToInputBuffer(inputinfo);
+    }
+}
+
+void ABaseCharacter::GamePadFaceButtonTopAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        FInputInfo inputinfo;
+        inputinfo.inputName = "Y";
+        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+        AddInputToInputBuffer(inputinfo);
+    }
+}
+
+void ABaseCharacter::GamePadRightShoulderAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        FInputInfo inputinfo;
+        inputinfo.inputName = "RB";
+        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+        AddInputToInputBuffer(inputinfo);
+    }
+}
+
+void ABaseCharacter::GamePadLeftShoulderAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        FInputInfo inputinfo;
+        inputinfo.inputName = "LB";
+        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+        AddInputToInputBuffer(inputinfo);
+    }
+}
+
+void ABaseCharacter::GamePadRightTriggerAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        FInputInfo inputinfo;
+        inputinfo.inputName = "RT";
+        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+        AddInputToInputBuffer(inputinfo);
+    }
+}
+
+void ABaseCharacter::GamePadLeftTriggerAction(const FInputActionValue& Value)
+{
+    if (Value.Get<bool>())
+    {
+        FInputInfo inputinfo;
+        inputinfo.inputName = "LT";
+        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+        AddInputToInputBuffer(inputinfo);
+    }
 }
 
 void ABaseCharacter::Landed(const FHitResult& Hit)

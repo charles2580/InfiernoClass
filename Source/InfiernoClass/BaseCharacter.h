@@ -9,6 +9,8 @@
 #include "PlayerAnimInstance.h"
 #include "StateManager.h"
 #include "BaseState.h"
+#include "HitboxComponent.h"
+#include "GameFramework/RootMotionSource.h"
 #include "BaseCharacter.generated.h"
 
 class UInputMappingContext;
@@ -51,6 +53,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool hasUsedCommand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UAnimMontage* ComboAttackMontage;
 };
 
 UCLASS()
@@ -66,6 +71,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
 	UPROPERTY(EditAnywhere, Category = "Input")
 	class UInputAction* IA_MoveForward;
 
@@ -79,8 +85,17 @@ protected:
 	UAnimMontage* JumpMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
+	UAnimMontage* L_PunchMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
 	UAnimMontage* Combo1Montage;
-	
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
+	UAnimMontage* Combo2Montage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Motion Warping")
+	class UMotionWarpingComponent* MotionWarpingComponent;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -92,25 +107,42 @@ public:
 	virtual void Landed(const FHitResult& Hit) override;
 
 	void MoveAction(const FInputActionValue& Value);
+	void AttackAction(const FInputActionValue& Value);
 	void JumpAction(const FInputActionValue& Value);
 	void CrouchAction(const FInputActionValue& Value);
 	void MoveStarted(const FInputActionValue& Value);
 	void MoveCompleted(const FInputActionValue& Value);
+	void GamePadFaceButtonBottomAction(const FInputActionValue& Value);
+	void GamePadFaceButtonRightAction(const FInputActionValue& Value);
+	void GamePadFaceButtonLeftAction(const FInputActionValue& Value);
+	void GamePadFaceButtonTopAction(const FInputActionValue& Value);
+	void GamePadRightShoulderAction(const FInputActionValue& Value);
+	void GamePadLeftShoulderAction(const FInputActionValue& Value);
+	void GamePadRightTriggerAction(const FInputActionValue& Value);
+	void GamePadLeftTriggerAction(const FInputActionValue& Value);
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	float GetSpeed() const;
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	bool GetBlock() const;
 
+	void SetWarpTarget(FName TargetName, const FTransform& TargetTransform);
+	void ClearWarpTarget(FName TargetName);
+
+	void ApplyDamage(float Damage);
+
 	TScriptInterface<IBaseState> CurrentState;
 
 	UPROPERTY()
 	UStateManager* StateManager;
 
-	UPROPERTY(EditAnywhere, Category = "Animation");
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	float Speed;
-	UPROPERTY(EditAnywhere, Category = "Animation");
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	bool Block;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		UHitboxComponent* HitboxComponent;
 
 protected:
 
@@ -121,10 +153,10 @@ protected:
 	void RemoveInputFromInputBuffer();
 
 	UFUNCTION(BlueprintCallable)
-		void CheckInputBufferForCommand();
+	void CheckInputBufferForCommand();
 	
 	UFUNCTION(BlueprintCallable)
-		void StartCommand(FString _commandName);
+	void StartCommand(FString _commandName);
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")

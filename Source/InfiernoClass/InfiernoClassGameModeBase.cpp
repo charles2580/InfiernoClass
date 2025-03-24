@@ -128,13 +128,18 @@ void AInfiernoClassGameModeBase::StartPlay()
     if (PC1)
     {
         FVector SpawnLocation1(200.f, 0.f, 100.f); // 두 번째 Pawn의 위치
-        FRotator SpawnRotation1 = FRotator::ZeroRotator;
+        FRotator SpawnRotation1(0.0f, 180.0f, 0.0f);
         FTransform SpawnTransform1(SpawnRotation1, SpawnLocation1, FVector(1.0f));
 
         ABaseCharacter* Pawn1 = World->SpawnActorDeferred<ABaseCharacter>(SelectedPawnClass, SpawnTransform1);
         if (Pawn1)
         {
             Pawn1->AutoPossessPlayer = EAutoReceiveInput::Player1;
+            USkeletalMeshComponent* MeshComp = Pawn1->GetMesh();
+            FVector NewScale = MeshComp->GetRelativeScale3D();
+            NewScale.Y *= -1.f;
+            MeshComp->SetRelativeScale3D(NewScale);
+
             Pawn1->FinishSpawning(SpawnTransform1);
 
             // Possess()를 0.1초 지연 후 호출

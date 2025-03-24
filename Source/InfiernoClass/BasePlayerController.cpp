@@ -63,6 +63,38 @@ void ABasePlayerController::SetupInputComponent()
         {
             EnhancedInput->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleAttack);
         }
+        if (IA_Gamepad_FaceButton_Bottom)
+        {
+            EnhancedInput->BindAction(IA_Gamepad_FaceButton_Bottom, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadFaceButtonBottom);
+        }
+        if (IA_Gamepad_FaceButton_Left)
+        {
+            EnhancedInput->BindAction(IA_Gamepad_FaceButton_Left, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadFaceButtonLeft);
+        }
+        if (IA_Gamepad_FaceButton_Right)
+        {
+            EnhancedInput->BindAction(IA_Gamepad_FaceButton_Right, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadFaceButtonRight);
+        }
+        if (IA_Gamepad_FaceButton_Top)
+        {
+            EnhancedInput->BindAction(IA_Gamepad_FaceButton_Top, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadFaceButtonTop);
+        }
+        if (IA_Gamepad_LeftShoulder)
+        {
+            EnhancedInput->BindAction(IA_Gamepad_LeftShoulder, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadLeftShoulder);
+        }
+        if (IA_Gamepad_RightShoulder)
+        {
+            EnhancedInput->BindAction(IA_Gamepad_RightShoulder, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadRightShoulder);
+        }
+        if (IA_Gamepad_LeftTrigger)
+        {
+            EnhancedInput->BindAction(IA_Gamepad_LeftTrigger, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadLeftTrigger);
+        }
+        if (IA_Gamepad_RightTrigger)
+        {
+            EnhancedInput->BindAction(IA_Gamepad_RightTrigger, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadRightTrigger);
+        }
     }
 }
 
@@ -97,7 +129,103 @@ void ABasePlayerController::HandleAttack(const FInputActionValue& Value)
         ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
         if (MyCharacter)
         {
-            //MyCharacter->AttackAction(Value);
+            MyCharacter->AttackAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleGamePadFaceButtonBottom(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->GamePadFaceButtonBottomAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleGamePadFaceButtonRight(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->GamePadFaceButtonRightAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleGamePadFaceButtonLeft(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->GamePadFaceButtonLeftAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleGamePadFaceButtonTop(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->GamePadFaceButtonTopAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleGamePadLeftShoulder(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->GamePadLeftShoulderAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleGamePadRightShoulder(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->GamePadRightShoulderAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleGamePadLeftTrigger(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->GamePadLeftTriggerAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleGamePadRightTrigger(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->GamePadRightTriggerAction(Value);
         }
     }
 }

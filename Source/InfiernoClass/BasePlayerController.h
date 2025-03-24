@@ -31,6 +31,30 @@ protected:
 		class UInputAction* IA_Attack;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_Gamepad_FaceButton_Bottom;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_Gamepad_FaceButton_Right;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_Gamepad_FaceButton_Left;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_Gamepad_FaceButton_Top;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_Gamepad_LeftShoulder;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_Gamepad_RightShoulder;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_Gamepad_LeftTrigger;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_Gamepad_RightTrigger;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 		class UInputMappingContext* MappingContext_Player1;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
@@ -39,5 +63,12 @@ protected:
 	void HandleMove(const FInputActionValue& Value);
 	void HandleJump(const FInputActionValue& Value);
 	void HandleAttack(const FInputActionValue& Value);
-
+	void HandleGamePadFaceButtonBottom(const FInputActionValue& Value);
+	void HandleGamePadFaceButtonRight(const FInputActionValue& Value);
+	void HandleGamePadFaceButtonLeft(const FInputActionValue& Value);
+	void HandleGamePadFaceButtonTop(const FInputActionValue& Value);
+	void HandleGamePadLeftShoulder(const FInputActionValue& Value);
+	void HandleGamePadRightShoulder(const FInputActionValue& Value);
+	void HandleGamePadLeftTrigger(const FInputActionValue& Value);
+	void HandleGamePadRightTrigger(const FInputActionValue& Value);
 };
