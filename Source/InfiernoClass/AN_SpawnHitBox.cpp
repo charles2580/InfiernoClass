@@ -6,30 +6,50 @@
 
 void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-	if (!MeshComp)
+	if (!MeshComp || !MeshComp->GetOwner())
 	{
 		return;
 	}
-	
-	ABaseCharacter* Character = Cast<ABaseCharacter>(MeshComp->GetOwner());
-	if (!Character || !Character->HitboxComponent)
-	{
-		return;
-	}
-	// 히트박스 설정
-	UHitboxComponent* Hitbox = Character->HitboxComponent;
-	Hitbox->ColliderSize = ColliderSize;
-	Hitbox->Damage = Damage;
-	Hitbox->Duration = Duration;
+	AActor* Owner = MeshComp->GetOwner();
+	FVector Start = MeshComp->GetSocketLocation(SocketName);
+	FVector End = Start + Owner->GetActorForwardVector()*AttackRange;
+	float CapsuleHalfHeight = (End - Start).Size() * 0.5f;
 
-	// 소켓 기준 위치 계산
-	if (SocketName != NAME_None && MeshComp->DoesSocketExist(SocketName))
+	// 중간 지점 = 캡슐 중심
+	FVector CapsuleCenter = (Start + End) * 0.5f;
+
+	// 방향 회전
+	FQuat CapsuleRotation = FRotationMatrix::MakeFromZ(End - Start).ToQuat();
+
+	FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Owner);
+
+	TArray<FHitResult> HitResults;
+
+	bool bHit = MeshComp->GetWorld()->SweepMultiByChannel(
+		HitResults,
+		CapsuleCenter,
+		CapsuleCenter, // 정지된 캡슐
+		CapsuleRotation,
+		ECC_Pawn, // 또는 커스텀 채널
+		CapsuleShape,
+		Params
+	);
+
+	for (const FHitResult& Hit : HitResults)
 	{
-		FVector SocketLocation = MeshComp->GetSocketLocation(SocketName);
-		Hitbox->ActivateHitbox(SocketLocation);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AnimNotify_ActivateHitbox: Invalid socket '%s'."), *SocketName.ToString());
+		if (AActor* HitActor = Hit.GetActor())
+		{
+			if (HitActor != Owner)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
+				if (ABaseCharacter* Target = Cast<ABaseCharacter>(HitActor))
+				{
+					Target->ApplyDamage(Damage);
+				}
+			}
+		}
 	}
 }

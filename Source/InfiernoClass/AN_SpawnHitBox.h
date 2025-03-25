@@ -21,16 +21,13 @@ public:
 		FName SocketName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FVector ColliderSize = FVector(30.f);
+		float CapsuleRadius = 30.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FVector RelativeLocation = FVector(0.f, 0.f, 50.f);
+		float AttackRange = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float Damage = 10.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float Duration = 0.3f;
 
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };

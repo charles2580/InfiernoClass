@@ -23,8 +23,8 @@ ABaseCharacter::ABaseCharacter()
     
     MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"));
 
-    HitboxComponent = CreateDefaultSubobject<UHitboxComponent>(TEXT("HitboxComponent"));
-    HitboxComponent->SetupAttachment(GetMesh());
+    //HitboxComponent = CreateDefaultSubobject<UHitboxComponent>(TEXT("HitboxComponent"));
+    //HitboxComponent->SetupAttachment(GetMesh());
 
     removeInputFromBufferTime = 1.0f;
     characterCommands.SetNum(2);
@@ -278,6 +278,7 @@ void ABaseCharacter::GamePadFaceButtonBottomAction(const FInputActionValue& Valu
 {
     if (Value.Get<bool>())
     {
+        UE_LOG(LogTemp, Warning, TEXT("GamePad A is Pressed"));
         FInputInfo inputinfo;
         inputinfo.inputName = "A";
         inputinfo.timeStamp = GetWorld()->GetTimeSeconds();

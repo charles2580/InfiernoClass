@@ -141,9 +141,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	bool Block;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		UHitboxComponent* HitboxComponent;
-
 protected:
 
 	UFUNCTION(BlueprintCallable)
