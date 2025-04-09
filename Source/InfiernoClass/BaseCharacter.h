@@ -195,6 +195,8 @@ private:
 	UCharacterMovementComponent* movementComponent;
 	UPlayerAnimInstance* animInstance;
 
+	TArray<FInputInfo> InputQueue;
+
 	bool bIsWaitingForInput = false;
 	bool bIsPlayingMontage = false;
 	FInputInfo pendingInput;

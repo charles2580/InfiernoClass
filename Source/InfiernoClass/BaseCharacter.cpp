@@ -261,9 +261,12 @@ void ABaseCharacter::HandleInput(ECommandInput Input)
     
     bool bCommandMatched = AddInputToInputBuffer(info);
     
+    InputQueue.Add(info);
+
     if (bCommandMatched)
     {
         GetWorld()->GetTimerManager().ClearTimer(InputConfirmHandle);
+        InputQueue.Empty();
         return;
     }
 
@@ -279,7 +282,7 @@ void ABaseCharacter::StartPendingInput(ECommandInput Input)
     GetWorld()->GetTimerManager().ClearTimer(InputConfirmHandle);
 
     GetWorld()->GetTimerManager().SetTimer(InputConfirmHandle, this,
-        &ABaseCharacter::PendingInput, 0.05f, false);
+        &ABaseCharacter::PendingInput, 0.15f, false);
 
 }
 
