@@ -1,0 +1,17 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\kbj56\\onedrive\\infiernoclass\\plugins\\gameviewportlocalmultiplayer\\gameviewportlocalmultiplayer\\intermediate\\build\\win64\\unrealeditor\\inc\\gameviewportlocalmultiplayer\\uht\\commongameviewportmultiplayer.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\kbj56\\onedrive\\infiernoclass\\intermediate\\build\\win64\\x64\\infiernoclasseditor\\development\\unrealed\\sharedpch.unrealed.cpp17.inclorderunreal5_1.h.pch",
+        "Includes": [
+            "c:\\users\\kbj56\\onedrive\\infiernoclass\\plugins\\gameviewportlocalmultiplayer\\gameviewportlocalmultiplayer\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\gameviewportlocalmultiplayer\\definitions.gameviewportlocalmultiplayer.h",
+            "c:\\users\\kbj56\\onedrive\\infiernoclass\\plugins\\gameviewportlocalmultiplayer\\gameviewportlocalmultiplayer\\source\\gameviewportlocalmultiplayer\\public\\commongameviewportmultiplayer.h",
+            "c:\\program files\\epic games\\ue_5.3\\engine\\plugins\\runtime\\commonui\\source\\commonui\\public\\commongameviewportclient.h",
+            "c:\\program files\\epic games\\ue_5.3\\engine\\plugins\\runtime\\commonui\\intermediate\\build\\win64\\unrealeditor\\inc\\commonui\\uht\\commongameviewportclient.generated.h",
+            "c:\\users\\kbj56\\onedrive\\infiernoclass\\plugins\\gameviewportlocalmultiplayer\\gameviewportlocalmultiplayer\\intermediate\\build\\win64\\unrealeditor\\inc\\gameviewportlocalmultiplayer\\uht\\commongameviewportmultiplayer.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

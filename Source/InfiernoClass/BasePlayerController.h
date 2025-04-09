@@ -22,6 +22,9 @@ public:
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_AnyKey;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 		class UInputAction* IA_Move;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
@@ -71,4 +74,5 @@ protected:
 	void HandleGamePadRightShoulder(const FInputActionValue& Value);
 	void HandleGamePadLeftTrigger(const FInputActionValue& Value);
 	void HandleGamePadRightTrigger(const FInputActionValue& Value);
+	void HandleRemoveInputFromInputBuffer(const FInputActionValue& Value);
 };

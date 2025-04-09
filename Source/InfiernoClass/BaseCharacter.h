@@ -26,6 +26,19 @@ enum class ECharacterState : uint8
 	Block
 };
 
+UENUM(BlueprintType)
+enum class ECommandInput : uint8
+{
+	Forward UMETA(DisplayName = "Forward"),
+	Backward UMETA(DisplayName = "Backward"),
+	Jump UMETA(DisplayName = "Jump"),
+	Crunch UMETA(DisplayName = "Crunch"),
+	A UMETA(DisplayName = "A"),
+	B UMETA(DisplayName = "B"),
+	X UMETA(DisplayName = "X"),
+	Y UMETA(DisplayName = "Y")
+};
+
 USTRUCT(BlueprintType)
 struct FInputInfo
 {
@@ -33,7 +46,7 @@ struct FInputInfo
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	FString inputName;
+	ECommandInput inputName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	float timeStamp;
@@ -49,7 +62,7 @@ public:
 	FString name;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	TArray<FString> inputs;
+	TArray<ECommandInput> inputs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool hasUsedCommand;
@@ -82,6 +95,9 @@ protected:
 	class UInputAction* IA_Crouch;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
+	UAnimMontage* DamagedMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
 	UAnimMontage* JumpMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
@@ -106,6 +122,13 @@ public:
 	void RequestStateChange(ECharacterState NewState);
 	virtual void Landed(const FHitResult& Hit) override;
 
+	void ForwardAction(const FInputActionValue& Value);
+	void BackwardAction(const FInputActionValue& Value);
+	void LeftPunchAction(const FInputActionValue& Value);
+	void RightPunchAction(const FInputActionValue& Value);
+	void LeftKickAction(const FInputActionValue& Value);
+	void RightKickAction(const FInputActionValue& Value);
+
 	void MoveAction(const FInputActionValue& Value);
 	void AttackAction(const FInputActionValue& Value);
 	void JumpAction(const FInputActionValue& Value);
@@ -120,6 +143,9 @@ public:
 	void GamePadLeftShoulderAction(const FInputActionValue& Value);
 	void GamePadRightTriggerAction(const FInputActionValue& Value);
 	void GamePadLeftTriggerAction(const FInputActionValue& Value);
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveInputFromInputBuffer();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	float GetSpeed() const;
@@ -144,16 +170,13 @@ public:
 protected:
 
 	UFUNCTION(BlueprintCallable)
-	void AddInputToInputBuffer(FInputInfo _inputinfo);
+	bool AddInputToInputBuffer(FInputInfo _inputinfo);
 
 	UFUNCTION(BlueprintCallable)
-	void RemoveInputFromInputBuffer();
-
-	UFUNCTION(BlueprintCallable)
-	void CheckInputBufferForCommand();
+	bool CheckInputBufferForCommand();
 	
 	UFUNCTION(BlueprintCallable)
-	void StartCommand(FString _commandName);
+	void StartCommand(FString CommandName);
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -162,10 +185,26 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TArray<FCommand> characterCommands;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TMap<ECommandInput, UAnimMontage*> InputMontageMap;
+
 	FTimerHandle inputBufferTimerHandle;
 	float removeInputFromBufferTime;
 
 private:
 	UCharacterMovementComponent* movementComponent;
 	UPlayerAnimInstance* animInstance;
+
+	bool bIsWaitingForInput = false;
+	bool bIsPlayingMontage = false;
+	FInputInfo pendingInput;
+	FTimerHandle InputConfirmHandle;
+
+	void HandleInput(ECommandInput Input);
+	void StartPendingInput(ECommandInput Input);
+	void PendingInput();
+	void CancelPendingInput();
+	void ExecuteActionForInput(ECommandInput Input);
+
+	void PlayAnimSafe(UAnimMontage* MontageToPlay);
 };

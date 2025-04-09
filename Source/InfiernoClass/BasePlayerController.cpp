@@ -95,6 +95,10 @@ void ABasePlayerController::SetupInputComponent()
         {
             EnhancedInput->BindAction(IA_Gamepad_RightTrigger, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleGamePadRightTrigger);
         }
+        if (IA_AnyKey)
+        {
+            EnhancedInput->BindAction(IA_AnyKey, ETriggerEvent::Triggered, this, &ABasePlayerController::HandleRemoveInputFromInputBuffer);
+        }
     }
 }
 
@@ -108,6 +112,7 @@ void ABasePlayerController::HandleMove(const FInputActionValue& Value)
             MyCharacter->MoveAction(Value);
         }
     }
+    //FEnhancedActionKeyMapping
 }
 
 void ABasePlayerController::HandleJump(const FInputActionValue& Value)
@@ -226,6 +231,18 @@ void ABasePlayerController::HandleGamePadRightTrigger(const FInputActionValue& V
         if (MyCharacter)
         {
             MyCharacter->GamePadRightTriggerAction(Value);
+        }
+    }
+}
+
+void ABasePlayerController::HandleRemoveInputFromInputBuffer(const FInputActionValue& Value)
+{
+    if (APawn* ControlledPawn = GetPawn())
+    {
+        ABaseCharacter* MyCharacter = Cast<ABaseCharacter>(ControlledPawn);
+        if (MyCharacter)
+        {
+            MyCharacter->RemoveInputFromInputBuffer();
         }
     }
 }

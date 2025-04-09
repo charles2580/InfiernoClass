@@ -23,25 +23,7 @@ ABaseCharacter::ABaseCharacter()
     
     MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"));
 
-    //HitboxComponent = CreateDefaultSubobject<UHitboxComponent>(TEXT("HitboxComponent"));
-    //HitboxComponent->SetupAttachment(GetMesh());
-
     removeInputFromBufferTime = 1.0f;
-    characterCommands.SetNum(2);
-
-    characterCommands[0].name = "Command #1";
-    characterCommands[0].inputs.Add("A");
-    characterCommands[0].inputs.Add("B");
-    characterCommands[0].inputs.Add("X");
-    characterCommands[0].hasUsedCommand = false;
-    characterCommands[0].ComboAttackMontage = Combo1Montage;
-
-    characterCommands[1].name = "Command #2";
-    characterCommands[1].inputs.Add("A");
-    characterCommands[1].inputs.Add("B");
-    characterCommands[1].inputs.Add("Y");
-    characterCommands[1].hasUsedCommand = false;
-    characterCommands[1].ComboAttackMontage = Combo2Montage;
 }
 
 // Called when the game starts or when spawned
@@ -136,67 +118,224 @@ void ABaseCharacter::ApplyDamage(float Damage)
     UE_LOG(LogTemp, Warning, TEXT("%s took %.1f damage!"), *GetName(), Damage);
 }
 
-void ABaseCharacter::AddInputToInputBuffer(FInputInfo _inputinfo)
+bool ABaseCharacter::AddInputToInputBuffer(FInputInfo _inputinfo)
 {
     inputBuffer.Add(_inputinfo);
-    CheckInputBufferForCommand();
+
+    const float MaxBufferTime = 2.0f;
+    const float CurrentTime = GetWorld()->GetTimeSeconds();
+
+    inputBuffer.RemoveAll([CurrentTime, MaxBufferTime](const FInputInfo& Info) {
+        return CurrentTime - Info.timeStamp > MaxBufferTime;
+        });
+
+    return CheckInputBufferForCommand();
 }
 
 void ABaseCharacter::RemoveInputFromInputBuffer()
 {
+    if (!GetWorld())
+    {
+        return;
+    }
+
+    float CurrentTime = GetWorld()->GetTimeSeconds();
+
+    const float ExpireThreshold = 0.3f;
+
+    for (int i = inputBuffer.Num() - 1; i >= 0; --i)
+    {
+        if (CurrentTime - inputBuffer[i].timeStamp > ExpireThreshold)
+        {
+            inputBuffer.RemoveAt(i);
+        }
+    }
 }
 
-void ABaseCharacter::CheckInputBufferForCommand()
+bool ABaseCharacter::CheckInputBufferForCommand()
 {
-    int correctSequenceCounter = 0;
+    //int correctSequenceCounter = 0;
+    //for (auto currentCommand : characterCommands)
+    //{
+    //    for (int commandInput = 0; commandInput < currentCommand.inputs.Num(); ++commandInput)
+    //    {
+    //        for (int input = 0; input < inputBuffer.Num(); ++input)
+    //        {
+    //            if (input + correctSequenceCounter < inputBuffer.Num())
+    //            {
+    //                if (inputBuffer[input + correctSequenceCounter].inputName.Compare(currentCommand.inputs[commandInput]) == 0)
+    //                {
+    //                    //UE_LOG(LogTemp, Warning, TEXT("The player added another input to the command sequence"));
+    //                    ++correctSequenceCounter;
+    //                    if (correctSequenceCounter == currentCommand.inputs.Num())
+    //                    {
+    //                        StartCommand(currentCommand.name);
+    //                    }
+    //                    break;
+    //                }
+    //                else
+    //                {
+    //                    //UE_LOG(LogTemp, Warning, TEXT("The player borke the command sequence."));
+    //                    correctSequenceCounter = 0;
+    //                }
+    //            }
+    //            else
+    //            {
+    //                //UE_LOG(LogTemp, Warning, TEXT("The player is not yet finished with the command sequence."));
+    //                correctSequenceCounter = 0;
+    //            }
+    //        }
+    //    }
+    //}
+    const float MaxInputDelay = 0.3f;
 
-    for (auto currentCommand : characterCommands)
+    for (const auto& Command : characterCommands)
     {
-        for (int commandInput = 0; commandInput < currentCommand.inputs.Num(); ++commandInput)
+        const int32 CommandLength = Command.inputs.Num();
+        const int32 BufferLength = inputBuffer.Num();
+
+        if (BufferLength < CommandLength)
         {
-            for (int input = 0; input < inputBuffer.Num(); ++input)
+            continue;
+        }
+
+        // inputBuffer 전체를 슬라이딩 윈도우 방식으로 순회
+        for (int32 i = 0; i <= BufferLength - CommandLength; ++i)
+        {
+            bool bMatched = true;
+
+            for (int32 j = 0; j < CommandLength; ++j)
             {
-                if (input + correctSequenceCounter < inputBuffer.Num())
+                if (inputBuffer[i + j].inputName != Command.inputs[j])
                 {
-                    if (inputBuffer[input + correctSequenceCounter].inputName.Compare(currentCommand.inputs[commandInput]) == 0)
+                    bMatched = false;
+                    break;
+                }
+
+                // 시간 조건 검사 (j > 0 부터)
+                if (j > 0)
+                {
+                    float Delta = inputBuffer[i + j].timeStamp - inputBuffer[i + j - 1].timeStamp;
+                    if (Delta > MaxInputDelay)
                     {
-                        //UE_LOG(LogTemp, Warning, TEXT("The player added another input to the command sequence"));
-                        ++correctSequenceCounter;
-
-                        if (correctSequenceCounter == currentCommand.inputs.Num())
-                        {
-                            StartCommand(currentCommand.name);
-                        }
-
+                        UE_LOG(LogTemp, Warning, TEXT("Input too slow: %.2f"), Delta);
+                        bMatched = false;
                         break;
                     }
-                    else
-                    {
-                        //UE_LOG(LogTemp, Warning, TEXT("The player borke the command sequence."));
-                        correctSequenceCounter = 0;
-                    }
                 }
-                else
-                {
-                    //UE_LOG(LogTemp, Warning, TEXT("The player is not yet finished with the command sequence."));
-                    correctSequenceCounter = 0;
-                }
+            }
+
+            if (bMatched)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Command Matched: %s"), *Command.name);
+                StartCommand(Command.name);
+
+                inputBuffer.RemoveAt(i, CommandLength);
+                return true;
             }
         }
     }
+
+    return false;
 }
 
-void ABaseCharacter::StartCommand(FString _commandName)
+void ABaseCharacter::StartCommand(FString CommandName)
 {
-    for (int currentCommand = 0; currentCommand < characterCommands.Num(); ++currentCommand)
+    for (FCommand& Command : characterCommands)
     {
-        if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
+        if (!CommandName.Equals(Command.name))
         {
-            UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *_commandName);
-            characterCommands[currentCommand].hasUsedCommand = true;
-            PlayAnimMontage(characterCommands[currentCommand].ComboAttackMontage);
+            continue;
+        }
+        UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *CommandName);
+        Command.hasUsedCommand = true;
+        PlayAnimSafe(Command.ComboAttackMontage);
+    }
+}
+
+void ABaseCharacter::HandleInput(ECommandInput Input)
+{
+    FInputInfo info;
+    info.inputName = Input;
+    info.timeStamp = GetWorld()->GetTimeSeconds();
+    
+    bool bCommandMatched = AddInputToInputBuffer(info);
+    
+    if (bCommandMatched)
+    {
+        GetWorld()->GetTimerManager().ClearTimer(InputConfirmHandle);
+        return;
+    }
+
+    StartPendingInput(Input);
+}
+
+void ABaseCharacter::StartPendingInput(ECommandInput Input)
+{
+    pendingInput.inputName = Input;
+    pendingInput.timeStamp = GetWorld()->GetTimeSeconds();
+    bIsWaitingForInput = true;
+
+    GetWorld()->GetTimerManager().ClearTimer(InputConfirmHandle);
+
+    GetWorld()->GetTimerManager().SetTimer(InputConfirmHandle, this,
+        &ABaseCharacter::PendingInput, 0.05f, false);
+
+}
+
+void ABaseCharacter::PendingInput()
+{
+    if (!bIsWaitingForInput)
+    {
+        return;
+    }
+
+    bIsWaitingForInput = false;
+    ExecuteActionForInput(pendingInput.inputName);
+}
+
+void ABaseCharacter::CancelPendingInput()
+{
+    bIsWaitingForInput = false;
+    GetWorld()->GetTimerManager().ClearTimer(InputConfirmHandle);
+}
+
+void ABaseCharacter::ExecuteActionForInput(ECommandInput Input)
+{
+    if (Input == ECommandInput::Forward || Input == ECommandInput::Backward)
+    {
+        return;
+    }
+
+    if (InputMontageMap.Contains(Input))
+    {
+        UAnimMontage* Montage = InputMontageMap[Input];
+        if (Montage && animInstance)
+        {
+            PlayAnimSafe(Montage);
         }
     }
+}
+
+void ABaseCharacter::PlayAnimSafe(UAnimMontage* MontageToPlay)
+{
+    if (!MontageToPlay || !animInstance)
+    {
+        return;
+    }
+
+    bool bIsException = false;
+
+    if (DamagedMontage || DamagedMontage == MontageToPlay)
+    {
+        bIsException = true;
+    }
+
+    if (!bIsException && animInstance->IsAnyMontagePlaying())
+    {
+        return;
+    }
+    animInstance->Montage_Play(MontageToPlay);
 }
 
 void ABaseCharacter::MoveAction(const FInputActionValue& Value)
@@ -276,21 +415,25 @@ void ABaseCharacter::MoveCompleted(const FInputActionValue& Value)
 
 void ABaseCharacter::GamePadFaceButtonBottomAction(const FInputActionValue& Value)
 {
+    //if (Value.Get<bool>())
+    //{
+    //    UE_LOG(LogTemp, Warning, TEXT("GamePad A is Pressed"));
+    //    FInputInfo inputinfo;
+    //    inputinfo.inputName = ECommandInput::A;
+    //    inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+    //    AddInputToInputBuffer(inputinfo);
+    //    if (animInstance && L_PunchMontage)
+    //    {
+    //        animInstance->Montage_Play(L_PunchMontage);
+    //    }
+    //}
+    //else
+    //{
+    //    UE_LOG(LogTemp, Warning, TEXT("GamePad A is not Pressed"));
+    //}
     if (Value.Get<bool>())
     {
-        UE_LOG(LogTemp, Warning, TEXT("GamePad A is Pressed"));
-        FInputInfo inputinfo;
-        inputinfo.inputName = "A";
-        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-        AddInputToInputBuffer(inputinfo);
-        if (animInstance && L_PunchMontage)
-        {
-            animInstance->Montage_Play(L_PunchMontage);
-        }
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("GamePad A is not Pressed"));
+        HandleInput(ECommandInput::A);
     }
 }
 
@@ -298,10 +441,7 @@ void ABaseCharacter::GamePadFaceButtonRightAction(const FInputActionValue& Value
 {
     if (Value.Get<bool>())
     {
-        FInputInfo inputinfo;
-        inputinfo.inputName = "B";
-        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-        AddInputToInputBuffer(inputinfo);
+        HandleInput(ECommandInput::B);
     }
 }
 
@@ -309,10 +449,7 @@ void ABaseCharacter::GamePadFaceButtonLeftAction(const FInputActionValue& Value)
 {
     if (Value.Get<bool>())
     {
-        FInputInfo inputinfo;
-        inputinfo.inputName = "X";
-        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-        AddInputToInputBuffer(inputinfo);
+        HandleInput(ECommandInput::X);
     }
 }
 
@@ -320,10 +457,7 @@ void ABaseCharacter::GamePadFaceButtonTopAction(const FInputActionValue& Value)
 {
     if (Value.Get<bool>())
     {
-        FInputInfo inputinfo;
-        inputinfo.inputName = "Y";
-        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-        AddInputToInputBuffer(inputinfo);
+        HandleInput(ECommandInput::Y);
     }
 }
 
@@ -331,10 +465,7 @@ void ABaseCharacter::GamePadRightShoulderAction(const FInputActionValue& Value)
 {
     if (Value.Get<bool>())
     {
-        FInputInfo inputinfo;
-        inputinfo.inputName = "RB";
-        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-        AddInputToInputBuffer(inputinfo);
+
     }
 }
 
@@ -342,10 +473,7 @@ void ABaseCharacter::GamePadLeftShoulderAction(const FInputActionValue& Value)
 {
     if (Value.Get<bool>())
     {
-        FInputInfo inputinfo;
-        inputinfo.inputName = "LB";
-        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-        AddInputToInputBuffer(inputinfo);
+
     }
 }
 
@@ -353,10 +481,7 @@ void ABaseCharacter::GamePadRightTriggerAction(const FInputActionValue& Value)
 {
     if (Value.Get<bool>())
     {
-        FInputInfo inputinfo;
-        inputinfo.inputName = "RT";
-        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-        AddInputToInputBuffer(inputinfo);
+
     }
 }
 
@@ -364,10 +489,7 @@ void ABaseCharacter::GamePadLeftTriggerAction(const FInputActionValue& Value)
 {
     if (Value.Get<bool>())
     {
-        FInputInfo inputinfo;
-        inputinfo.inputName = "LT";
-        inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-        AddInputToInputBuffer(inputinfo);
+
     }
 }
 
@@ -379,4 +501,47 @@ void ABaseCharacter::Landed(const FHitResult& Hit)
         animInstance->bIsJumping = false;
         movementComponent->AirControl = 1.0f;
     }
+}
+
+void ABaseCharacter::ForwardAction(const FInputActionValue& Value)
+{
+    if (!Value.Get<bool>())
+    {
+        return;
+    }
+
+    FInputInfo inputinfo;
+    inputinfo.inputName = ECommandInput::Forward;
+    inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+    AddInputToInputBuffer(inputinfo);
+}
+
+void ABaseCharacter::BackwardAction(const FInputActionValue& Value)
+{
+    if (!Value.Get<bool>())
+    {
+        return;
+    }
+
+    FInputInfo inputinfo;
+    inputinfo.inputName = ECommandInput::Backward;
+    inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
+    AddInputToInputBuffer(inputinfo);
+}
+
+void ABaseCharacter::LeftPunchAction(const FInputActionValue& Value)
+{
+
+}
+
+void ABaseCharacter::RightPunchAction(const FInputActionValue& Value)
+{
+}
+
+void ABaseCharacter::LeftKickAction(const FInputActionValue& Value)
+{
+}
+
+void ABaseCharacter::RightKickAction(const FInputActionValue& Value)
+{
 }
