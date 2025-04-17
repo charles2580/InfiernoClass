@@ -34,28 +34,28 @@ protected:
 		class UInputAction* IA_Attack;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-		class UInputAction* IA_Gamepad_FaceButton_Bottom;
+		class UInputAction* IA_Forward;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-		class UInputAction* IA_Gamepad_FaceButton_Right;
+		class UInputAction* IA_Backward;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-		class UInputAction* IA_Gamepad_FaceButton_Left;
+		class UInputAction* IA_Crunch;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-		class UInputAction* IA_Gamepad_FaceButton_Top;
+		class UInputAction* IA_CrunchReleased;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+		class UInputAction* IA_LeftPunch;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-		class UInputAction* IA_Gamepad_LeftShoulder;
+		class UInputAction* IA_RightPunch;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-		class UInputAction* IA_Gamepad_RightShoulder;
+		class UInputAction* IA_LeftKick;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-		class UInputAction* IA_Gamepad_LeftTrigger;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-		class UInputAction* IA_Gamepad_RightTrigger;
+		class UInputAction* IA_RightKick;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 		class UInputMappingContext* MappingContext_Player1;
@@ -63,16 +63,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 		class UInputMappingContext* MappingContext_Player2;
 
-	void HandleMove(const FInputActionValue& Value);
-	void HandleJump(const FInputActionValue& Value);
-	void HandleAttack(const FInputActionValue& Value);
-	void HandleGamePadFaceButtonBottom(const FInputActionValue& Value);
-	void HandleGamePadFaceButtonRight(const FInputActionValue& Value);
-	void HandleGamePadFaceButtonLeft(const FInputActionValue& Value);
-	void HandleGamePadFaceButtonTop(const FInputActionValue& Value);
-	void HandleGamePadLeftShoulder(const FInputActionValue& Value);
-	void HandleGamePadRightShoulder(const FInputActionValue& Value);
-	void HandleGamePadLeftTrigger(const FInputActionValue& Value);
-	void HandleGamePadRightTrigger(const FInputActionValue& Value);
+	void HandleMoveInput(const FInputActionValue& Value);
+	void HandleJumpInput(const FInputActionValue& Value);
+	void HandleAttackInput(const FInputActionValue& Value);
+	void HandleForwardInput(const FInputActionValue& Value);
+	void HandleBackwardInput(const FInputActionValue& Value);
+	void HandleCrunchInput(const FInputActionValue& Value);
+	void HandleCrunchReleasedInput(const FInputActionValue& Value);
+	void HandleLeftPunchInput(const FInputActionValue& Value);
+	void HandleRightPunchInput(const FInputActionValue& Value);
+
+	void HandleLeftKickInput(const FInputActionValue& Value);
+	void HandleRightKickInput(const FInputActionValue& Value);
+
 	void HandleRemoveInputFromInputBuffer(const FInputActionValue& Value);
 };

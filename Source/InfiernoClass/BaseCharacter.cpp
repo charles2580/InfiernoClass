@@ -5,11 +5,8 @@
 #include "Components/InputComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "IdleState.h"
-#include "WalkState.h"
-#include "AttackState.h"
-#include "HitState.h"
 #include "MotionWarpingComponent.h"
+#include "GameFramework/RootMotionSource.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -18,7 +15,7 @@ ABaseCharacter::ABaseCharacter()
 	PrimaryActorTick.bCanEverTick = true;
     Speed = 0;
     Block = false;
-    StateManager = CreateDefaultSubobject<UStateManager>(TEXT("StateManager"));
+    //StateManager = CreateDefaultSubobject<UStateManager>(TEXT("StateManager"));
     movementComponent = GetCharacterMovement();
     
     MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"));
@@ -63,28 +60,28 @@ void ABaseCharacter::Tick(float DeltaTime)
 //
 //}
 
-void ABaseCharacter::RequestStateChange(ECharacterState NewState)
-{
-    switch (NewState)
-    {
-    case ECharacterState::Idle:
-        StateManager->ChangeState(UIdleState::StaticClass());
-        break;
-    case ECharacterState::Walking:
-        StateManager->ChangeState(UWalkState::StaticClass());
-        break;
-    case ECharacterState::Attack:
-        StateManager->ChangeState(UAttackState::StaticClass());
-        break;
-    case ECharacterState::Hit:
-        StateManager->ChangeState(UHitState::StaticClass());
-        break;
-    case ECharacterState::Block:
-        //StateManager->ChangeState(UHitState::StaticClass());
-        break;
-    }
-
-}
+//void ABaseCharacter::RequestStateChange(ECharacterState NewState)
+//{
+//    switch (NewState)
+//    {
+//    case ECharacterState::Idle:
+//        StateManager->ChangeState(UIdleState::StaticClass());
+//        break;
+//    case ECharacterState::Walking:
+//        StateManager->ChangeState(UWalkState::StaticClass());
+//        break;
+//    case ECharacterState::Attack:
+//        StateManager->ChangeState(UAttackState::StaticClass());
+//        break;
+//    case ECharacterState::Hit:
+//        StateManager->ChangeState(UHitState::StaticClass());
+//        break;
+//    case ECharacterState::Block:
+//        //StateManager->ChangeState(UHitState::StaticClass());
+//        break;
+//    }
+//
+//}
 
 float ABaseCharacter::GetSpeed() const
 {
@@ -116,6 +113,11 @@ void ABaseCharacter::ClearWarpTarget(FName TargetName)
 void ABaseCharacter::ApplyDamage(float Damage)
 {
     UE_LOG(LogTemp, Warning, TEXT("%s took %.1f damage!"), *GetName(), Damage);
+}
+
+ECharacterState ABaseCharacter::GetCharacterState() const
+{
+    return CurrentState;
 }
 
 bool ABaseCharacter::AddInputToInputBuffer(FInputInfo _inputinfo)
@@ -282,7 +284,7 @@ void ABaseCharacter::StartPendingInput(ECommandInput Input)
     GetWorld()->GetTimerManager().ClearTimer(InputConfirmHandle);
 
     GetWorld()->GetTimerManager().SetTimer(InputConfirmHandle, this,
-        &ABaseCharacter::PendingInput, 0.15f, false);
+        &ABaseCharacter::PendingInput, 0.05f, false);
 
 }
 
@@ -305,7 +307,7 @@ void ABaseCharacter::CancelPendingInput()
 
 void ABaseCharacter::ExecuteActionForInput(ECommandInput Input)
 {
-    if (Input == ECommandInput::Forward || Input == ECommandInput::Backward)
+    if (Input == ECommandInput::Forward || Input == ECommandInput::Backward || Input == ECommandInput::Jump ||Input == ECommandInput::Crunch)
     {
         return;
     }
@@ -341,26 +343,59 @@ void ABaseCharacter::PlayAnimSafe(UAnimMontage* MontageToPlay)
     animInstance->Montage_Play(MontageToPlay);
 }
 
+void ABaseCharacter::PlayRootMotionJump()
+{
+    if (!GetCharacterMovement()) return;
+
+    TSharedPtr<FRootMotionSource_JumpForce> JumpForce = MakeShared<FRootMotionSource_JumpForce>();
+    JumpForce->InstanceName = FName("RootMotion_JumpForce");
+    JumpForce->AccumulateMode = ERootMotionAccumulateMode::Override;
+    JumpForce->Priority = 10;
+    JumpForce->Duration = 0.9f;
+    JumpForce->Distance = 0.0f;
+    JumpForce->Height = 100.0f;
+    JumpForce->bDisableTimeout = false; 
+    
+    GetCharacterMovement()->ApplyRootMotionSource(JumpForce);
+
+    // 점프 상태 전환
+    CurrentState = ECharacterState::Jump;
+
+    if (animInstance)
+    {
+        animInstance->bIsJumping = true;
+    }
+    
+}
+
 void ABaseCharacter::MoveAction(const FInputActionValue& Value)
 {
     FVector2D StickInput = Value.Get<FVector2D>();
-
     const float HorizontalDeadzone = 0.2f;
-    const float JumpThreshold = 0.8f;
 
+    if (CurrentState == ECharacterState::Attack ||
+        CurrentState == ECharacterState::Jump ||
+        CurrentState == ECharacterState::Crunch)
+    {
+        return;
+    }
+
+    // 좌우 이동
     if (FMath::Abs(StickInput.X) > HorizontalDeadzone)
     {
         AddMovementInput(GetActorForwardVector(), StickInput.X);
+        if (CurrentState != ECharacterState::Walking)
+        {
+            CurrentState = ECharacterState::Walking;
+        }
     }
 
-    if (StickInput.Y >= JumpThreshold)
+    else if (FMath::Abs(StickInput.X) < HorizontalDeadzone)
     {
-        if (!animInstance->bIsJumping)
+        if (CurrentState != ECharacterState::Idle && CurrentState != ECharacterState::Jump
+            && CurrentState != ECharacterState::Attack)
         {
-            if (JumpMontage)
-            {
-                animInstance->Montage_Play(JumpMontage);
-            }
+            CurrentState = ECharacterState::Idle;
         }
     }
 }
@@ -375,29 +410,59 @@ void ABaseCharacter::AttackAction(const FInputActionValue& Value)
 
 void ABaseCharacter::JumpAction(const FInputActionValue& Value)
 {
-    UE_LOG(LogTemp, Warning, TEXT("JUMP key was pressed!"));
-    if (Value.Get<bool>()&& !animInstance->bIsJumping)
+    FVector2D StickInput = Value.Get<FVector2D>();
+}
+
+void ABaseCharacter::CrunchAction(const FInputActionValue& Value)
+{
+    FVector2D StickInput = Value.Get<FVector2D>();
+    const float JumpThreshold = 0.7f;
+    const float VerticalDeadzone = 0.2f;
+    const float DownThreshold = -0.5f;
+
+    if (StickInput.Y >= JumpThreshold)
     {
-        movementComponent->AirControl = 0.0f;
-        movementComponent->FallingLateralFriction = 0.0f;
-        movementComponent->MaxAcceleration = 5000.0f;
-        movementComponent->MaxWalkSpeedCrouched = 600.0f;
-        if (JumpMontage && animInstance)
+        HandleInput(ECommandInput::Jump);
+        if (CurrentState == ECharacterState::Attack)
         {
-            animInstance->Montage_Play(JumpMontage);
+            return;
+        }
+
+        if (CurrentState != ECharacterState::Jump && !animInstance->bIsJumping)
+        {
+            PlayRootMotionJump();
+        }
+    }
+
+    // 아래 방향 입력: 수그리기 상태
+    if (StickInput.Y < DownThreshold)
+    {
+        if (CurrentState != ECharacterState::Crunch)
+        {
+            HandleInput(ECommandInput::Crunch);
+            CurrentState = ECharacterState::Crunch;
+        }
+    }
+
+    else if (FMath::Abs(StickInput.Y) < VerticalDeadzone)
+    {
+        if (CurrentState != ECharacterState::Idle && CurrentState != ECharacterState::Jump
+            && CurrentState != ECharacterState::Attack && CurrentState != ECharacterState::Walking)
+        {
+            CurrentState = ECharacterState::Idle;
         }
     }
 }
 
-void ABaseCharacter::CrouchAction(const FInputActionValue& Value)
+void ABaseCharacter::CrunchReleased(const FInputActionValue& Value)
 {
-    if (Value.Get<bool>())
+    if (!Value.Get<bool>())
     {
-        Crouch();
+        return;
     }
-    else
+    if (CurrentState == ECharacterState::Crunch)
     {
-        UnCrouch();
+        CurrentState = ECharacterState::Idle;
     }
 }
 
@@ -416,93 +481,19 @@ void ABaseCharacter::MoveCompleted(const FInputActionValue& Value)
 
 }
 
-void ABaseCharacter::GamePadFaceButtonBottomAction(const FInputActionValue& Value)
-{
-    //if (Value.Get<bool>())
-    //{
-    //    UE_LOG(LogTemp, Warning, TEXT("GamePad A is Pressed"));
-    //    FInputInfo inputinfo;
-    //    inputinfo.inputName = ECommandInput::A;
-    //    inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-    //    AddInputToInputBuffer(inputinfo);
-    //    if (animInstance && L_PunchMontage)
-    //    {
-    //        animInstance->Montage_Play(L_PunchMontage);
-    //    }
-    //}
-    //else
-    //{
-    //    UE_LOG(LogTemp, Warning, TEXT("GamePad A is not Pressed"));
-    //}
-    if (Value.Get<bool>())
-    {
-        HandleInput(ECommandInput::A);
-    }
-}
-
-void ABaseCharacter::GamePadFaceButtonRightAction(const FInputActionValue& Value)
-{
-    if (Value.Get<bool>())
-    {
-        HandleInput(ECommandInput::B);
-    }
-}
-
-void ABaseCharacter::GamePadFaceButtonLeftAction(const FInputActionValue& Value)
-{
-    if (Value.Get<bool>())
-    {
-        HandleInput(ECommandInput::X);
-    }
-}
-
-void ABaseCharacter::GamePadFaceButtonTopAction(const FInputActionValue& Value)
-{
-    if (Value.Get<bool>())
-    {
-        HandleInput(ECommandInput::Y);
-    }
-}
-
-void ABaseCharacter::GamePadRightShoulderAction(const FInputActionValue& Value)
-{
-    if (Value.Get<bool>())
-    {
-
-    }
-}
-
-void ABaseCharacter::GamePadLeftShoulderAction(const FInputActionValue& Value)
-{
-    if (Value.Get<bool>())
-    {
-
-    }
-}
-
-void ABaseCharacter::GamePadRightTriggerAction(const FInputActionValue& Value)
-{
-    if (Value.Get<bool>())
-    {
-
-    }
-}
-
-void ABaseCharacter::GamePadLeftTriggerAction(const FInputActionValue& Value)
-{
-    if (Value.Get<bool>())
-    {
-
-    }
-}
-
 void ABaseCharacter::Landed(const FHitResult& Hit)
 {
-    Super::OnLanded(Hit);
-    if (animInstance)
+    Super::Landed(Hit);
+
+    if (CurrentState == ECharacterState::Jump)
     {
-        animInstance->bIsJumping = false;
-        movementComponent->AirControl = 1.0f;
+        CurrentState = ECharacterState::Idle;
+        if (animInstance)
+        {
+            animInstance->bIsJumping = false;
+        }
+        UE_LOG(LogTemp, Warning, TEXT("is landed"));
+        GetCharacterMovement()->RemoveRootMotionSource(FName("RootMotion_JumpForce"));
     }
 }
 
@@ -512,11 +503,7 @@ void ABaseCharacter::ForwardAction(const FInputActionValue& Value)
     {
         return;
     }
-
-    FInputInfo inputinfo;
-    inputinfo.inputName = ECommandInput::Forward;
-    inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-    AddInputToInputBuffer(inputinfo);
+    HandleInput(ECommandInput::Forward);
 }
 
 void ABaseCharacter::BackwardAction(const FInputActionValue& Value)
@@ -525,26 +512,46 @@ void ABaseCharacter::BackwardAction(const FInputActionValue& Value)
     {
         return;
     }
-
-    FInputInfo inputinfo;
-    inputinfo.inputName = ECommandInput::Backward;
-    inputinfo.timeStamp = GetWorld()->GetTimeSeconds();
-    AddInputToInputBuffer(inputinfo);
+    HandleInput(ECommandInput::Backward);
 }
 
 void ABaseCharacter::LeftPunchAction(const FInputActionValue& Value)
 {
-
+    if (!Value.Get<bool>() || CurrentState != ECharacterState::Idle)
+    {
+        return;
+    }
+    HandleInput(ECommandInput::A);
+    CurrentState = ECharacterState::Attack;
 }
 
 void ABaseCharacter::RightPunchAction(const FInputActionValue& Value)
 {
+    if (!Value.Get<bool>() || CurrentState != ECharacterState::Idle )
+    {
+        return;
+    }
+    HandleInput(ECommandInput::B);
+    CurrentState = ECharacterState::Attack;
 }
 
 void ABaseCharacter::LeftKickAction(const FInputActionValue& Value)
 {
+    if (!Value.Get<bool>() || CurrentState != ECharacterState::Idle)
+    {
+        return;
+    }
+    HandleInput(ECommandInput::X);
+    CurrentState = ECharacterState::Attack;
+
 }
 
 void ABaseCharacter::RightKickAction(const FInputActionValue& Value)
 {
+    if (!Value.Get<bool>() || CurrentState != ECharacterState::Idle)
+    {
+        return;
+    }
+    HandleInput(ECommandInput::Y);
+    CurrentState = ECharacterState::Attack;
 }

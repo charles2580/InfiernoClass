@@ -7,8 +7,6 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayerAnimInstance.h"
-#include "StateManager.h"
-#include "BaseState.h"
 #include "HitboxComponent.h"
 #include "GameFramework/RootMotionSource.h"
 #include "BaseCharacter.generated.h"
@@ -22,6 +20,11 @@ enum class ECharacterState : uint8
 	Idle,
 	Walking,
 	Attack,
+	Jump,
+	Airbone,
+	Damaged,
+	NockDown,
+	Crunch,
 	Hit,
 	Block
 };
@@ -119,7 +122,7 @@ public:
 	// Called to bind functionality to input
 	//virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void RequestStateChange(ECharacterState NewState);
+	//void RequestStateChange(ECharacterState NewState);
 	virtual void Landed(const FHitResult& Hit) override;
 
 	void ForwardAction(const FInputActionValue& Value);
@@ -132,17 +135,11 @@ public:
 	void MoveAction(const FInputActionValue& Value);
 	void AttackAction(const FInputActionValue& Value);
 	void JumpAction(const FInputActionValue& Value);
-	void CrouchAction(const FInputActionValue& Value);
+	void CrunchAction(const FInputActionValue& Value);
+	void CrunchReleased(const FInputActionValue& Value);
 	void MoveStarted(const FInputActionValue& Value);
 	void MoveCompleted(const FInputActionValue& Value);
-	void GamePadFaceButtonBottomAction(const FInputActionValue& Value);
-	void GamePadFaceButtonRightAction(const FInputActionValue& Value);
-	void GamePadFaceButtonLeftAction(const FInputActionValue& Value);
-	void GamePadFaceButtonTopAction(const FInputActionValue& Value);
-	void GamePadRightShoulderAction(const FInputActionValue& Value);
-	void GamePadLeftShoulderAction(const FInputActionValue& Value);
-	void GamePadRightTriggerAction(const FInputActionValue& Value);
-	void GamePadLeftTriggerAction(const FInputActionValue& Value);
+
 
 	UFUNCTION(BlueprintCallable)
 	void RemoveInputFromInputBuffer();
@@ -157,16 +154,21 @@ public:
 
 	void ApplyDamage(float Damage);
 
-	TScriptInterface<IBaseState> CurrentState;
+	//TScriptInterface<IBaseState> CurrentState;
 
-	UPROPERTY()
-	UStateManager* StateManager;
+	/*UPROPERTY()
+	UStateManager* StateManager;*/
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	float Speed;
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	bool Block;
 
+	UPROPERTY(BluePrintReadWrite, Category = "CharacterState")
+		ECharacterState CurrentState = ECharacterState::Idle;
+
+	UFUNCTION(BlueprintCallable, Category = "CharacterState")
+		ECharacterState GetCharacterState() const;
 protected:
 
 	UFUNCTION(BlueprintCallable)
@@ -209,4 +211,5 @@ private:
 	void ExecuteActionForInput(ECommandInput Input);
 
 	void PlayAnimSafe(UAnimMontage* MontageToPlay);
+	void PlayRootMotionJump();
 };

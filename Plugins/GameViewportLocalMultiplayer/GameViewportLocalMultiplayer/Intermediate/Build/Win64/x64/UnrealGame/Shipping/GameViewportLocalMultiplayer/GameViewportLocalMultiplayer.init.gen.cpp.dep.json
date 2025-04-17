@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\kbj56\\onedrive\\infiernoclass\\plugins\\gameviewportlocalmultiplayer\\gameviewportlocalmultiplayer\\intermediate\\build\\win64\\unrealgame\\inc\\gameviewportlocalmultiplayer\\uht\\gameviewportlocalmultiplayer.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\kbj56\\onedrive\\infiernoclass\\intermediate\\build\\win64\\x64\\infiernoclass\\shipping\\engine\\sharedpch.engine.cpp17.inclorderunreal5_1.h.pch",
+        "Includes": [
+            "c:\\users\\kbj56\\onedrive\\infiernoclass\\plugins\\gameviewportlocalmultiplayer\\gameviewportlocalmultiplayer\\intermediate\\build\\win64\\x64\\unrealgame\\shipping\\gameviewportlocalmultiplayer\\definitions.gameviewportlocalmultiplayer.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
