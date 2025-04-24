@@ -30,8 +30,17 @@ enum class ECharacterState : uint8
 };
 
 UENUM(BlueprintType)
+enum class EAttackType : uint8
+{
+	High,
+	Mid,
+	Low
+};
+
+UENUM(BlueprintType)
 enum class ECommandInput : uint8
 {
+	None UMETA(DisplayName = "None"),
 	Forward UMETA(DisplayName = "Forward"),
 	Backward UMETA(DisplayName = "Backward"),
 	Jump UMETA(DisplayName = "Jump"),
@@ -104,6 +113,15 @@ protected:
 	UAnimMontage* JumpMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
+	UAnimMontage* HighBlockMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
+		UAnimMontage* MidBlockMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
+		UAnimMontage* LowBlockMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
 	UAnimMontage* L_PunchMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
@@ -152,7 +170,7 @@ public:
 	void SetWarpTarget(FName TargetName, const FTransform& TargetTransform);
 	void ClearWarpTarget(FName TargetName);
 
-	void ApplyDamage(float Damage);
+	void ApplyDamage(float Damage, EAttackType AttackType);
 
 	//TScriptInterface<IBaseState> CurrentState;
 
@@ -165,10 +183,14 @@ public:
 	bool Block;
 
 	UPROPERTY(BluePrintReadWrite, Category = "CharacterState")
-		ECharacterState CurrentState = ECharacterState::Idle;
+	ECharacterState CurrentState = ECharacterState::Idle;
 
 	UFUNCTION(BlueprintCallable, Category = "CharacterState")
-		ECharacterState GetCharacterState() const;
+	ECharacterState GetCharacterState() const;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterState")
+		void PlayAnimMontageSafe(UAnimMontage* AnimMontage, bool bIsCrouchAttack);
+
 protected:
 
 	UFUNCTION(BlueprintCallable)
@@ -190,10 +212,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TMap<ECommandInput, UAnimMontage*> InputMontageMap;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TMap<ECommandInput, UAnimMontage*> CrouchMontageMap;
+
 	FTimerHandle inputBufferTimerHandle;
 	float removeInputFromBufferTime;
 
 private:
+
+	ECommandInput LastHorizontalInput = ECommandInput::None;
+	ECommandInput LastVerticalInput = ECommandInput::None;
+
 	UCharacterMovementComponent* movementComponent;
 	UPlayerAnimInstance* animInstance;
 
@@ -212,4 +241,7 @@ private:
 
 	void PlayAnimSafe(UAnimMontage* MontageToPlay);
 	void PlayRootMotionJump();
+
+	void SetCharacterState(ECharacterState NewState);
+
 };

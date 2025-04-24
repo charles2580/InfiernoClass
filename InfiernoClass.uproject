@@ -28,7 +28,7 @@
 		},
 		{
 			"Name": "GameViewportLocalMultiplayer",
-			"Enabled": true,
+			"Enabled": false,
 			"SupportedTargetPlatforms": [
 				"Win64"
 			]

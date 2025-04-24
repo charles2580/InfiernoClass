@@ -2,7 +2,6 @@
 
 
 #include "AN_SpawnHitBox.h"
-#include "BaseCharacter.h"
 
 void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
@@ -47,7 +46,7 @@ void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 				UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
 				if (ABaseCharacter* Target = Cast<ABaseCharacter>(HitActor))
 				{
-					Target->ApplyDamage(Damage);
+					Target->ApplyDamage(Damage, AttackType);
 				}
 			}
 		}

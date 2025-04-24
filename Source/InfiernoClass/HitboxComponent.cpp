@@ -69,7 +69,7 @@ void UHitboxComponent::OnBeginOverlap(UPrimitiveComponent* Overlapped, AActor* O
 
 		if (Target && OwnerCharacter && Target != OwnerCharacter)
 		{
-			Target->ApplyDamage(Damage);
+			//Target->ApplyDamage(Damage);
 			UE_LOG(LogTemp, Warning, TEXT("Hitbox damaged %s for %.1f"), *Target->GetName(), Damage);
 		}
 	}

@@ -110,8 +110,54 @@ void ABaseCharacter::ClearWarpTarget(FName TargetName)
     }
 }
 
-void ABaseCharacter::ApplyDamage(float Damage)
+void ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
 {
+    // === 상단 공격 처리 ===
+    if (AttackType == EAttackType::High)
+    {
+        if (CurrentState == ECharacterState::Crunch)
+        {
+            UE_LOG(LogTemp, Log, TEXT("%s avoided high attack by crouching!"), *GetName());
+            return; // 공격 무효
+        }
+
+        if (LastHorizontalInput == ECommandInput::Backward)
+        {
+            SetCharacterState(ECharacterState::Block);
+            PlayAnimMontageSafe(HighBlockMontage, false);
+            UE_LOG(LogTemp, Log, TEXT("%s blocked high attack!"), *GetName());
+            return; // 블로킹 성공
+        }
+    }
+
+    // === 중단 공격 처리 ===
+    if (AttackType == EAttackType::Mid)
+    {
+        if (LastHorizontalInput == ECommandInput::Backward)
+        {
+            SetCharacterState(ECharacterState::Block);
+            PlayAnimMontageSafe(MidBlockMontage, false);
+            UE_LOG(LogTemp, Log, TEXT("%s blocked mid attack!"), *GetName());
+            return; // 블로킹 성공
+        }
+    }
+
+    // === 하단 공격 처리 ===
+    if (AttackType == EAttackType::Low)
+    {
+        if (CurrentState == ECharacterState::Jump)
+        {
+            UE_LOG(LogTemp, Log, TEXT("%s avoided low attack by jumping!"), *GetName());
+            return; // 점프로 회피 성공
+        }
+        if (CurrentState == ECharacterState::Crunch)
+        {
+            SetCharacterState(ECharacterState::Block);
+            PlayAnimMontageSafe(LowBlockMontage, true);
+        }
+    }
+
+    // === 데미지 처리 ===
     UE_LOG(LogTemp, Warning, TEXT("%s took %.1f damage!"), *GetName(), Damage);
 }
 
@@ -156,39 +202,6 @@ void ABaseCharacter::RemoveInputFromInputBuffer()
 
 bool ABaseCharacter::CheckInputBufferForCommand()
 {
-    //int correctSequenceCounter = 0;
-    //for (auto currentCommand : characterCommands)
-    //{
-    //    for (int commandInput = 0; commandInput < currentCommand.inputs.Num(); ++commandInput)
-    //    {
-    //        for (int input = 0; input < inputBuffer.Num(); ++input)
-    //        {
-    //            if (input + correctSequenceCounter < inputBuffer.Num())
-    //            {
-    //                if (inputBuffer[input + correctSequenceCounter].inputName.Compare(currentCommand.inputs[commandInput]) == 0)
-    //                {
-    //                    //UE_LOG(LogTemp, Warning, TEXT("The player added another input to the command sequence"));
-    //                    ++correctSequenceCounter;
-    //                    if (correctSequenceCounter == currentCommand.inputs.Num())
-    //                    {
-    //                        StartCommand(currentCommand.name);
-    //                    }
-    //                    break;
-    //                }
-    //                else
-    //                {
-    //                    //UE_LOG(LogTemp, Warning, TEXT("The player borke the command sequence."));
-    //                    correctSequenceCounter = 0;
-    //                }
-    //            }
-    //            else
-    //            {
-    //                //UE_LOG(LogTemp, Warning, TEXT("The player is not yet finished with the command sequence."));
-    //                correctSequenceCounter = 0;
-    //            }
-    //        }
-    //    }
-    //}
     const float MaxInputDelay = 0.3f;
 
     for (const auto& Command : characterCommands)
@@ -264,6 +277,7 @@ void ABaseCharacter::HandleInput(ECommandInput Input)
     bool bCommandMatched = AddInputToInputBuffer(info);
     
     InputQueue.Add(info);
+    UE_LOG(LogTemp, Log, TEXT("input : %s"), *UEnum::GetValueAsString(Input));
 
     if (bCommandMatched)
     {
@@ -312,12 +326,30 @@ void ABaseCharacter::ExecuteActionForInput(ECommandInput Input)
         return;
     }
 
-    if (InputMontageMap.Contains(Input))
+    if (CurrentState == ECharacterState::Crunch)
     {
-        UAnimMontage* Montage = InputMontageMap[Input];
-        if (Montage && animInstance)
+        if (CrouchMontageMap.Contains(Input))
         {
-            PlayAnimSafe(Montage);
+            UAnimMontage* Montage = CrouchMontageMap[Input];
+            if (Montage && animInstance)
+            {
+                PlayAnimMontageSafe(Montage, true);
+                SetCharacterState(ECharacterState::Attack);
+                return;
+            }
+        }
+    }
+
+    else
+    {    
+        if (InputMontageMap.Contains(Input))
+        {
+            UAnimMontage* Montage = InputMontageMap[Input];
+            if (Montage && animInstance)
+            {
+                PlayAnimMontageSafe(Montage, false);
+                SetCharacterState(ECharacterState::Attack);
+            }
         }
     }
 }
@@ -357,47 +389,49 @@ void ABaseCharacter::PlayRootMotionJump()
     JumpForce->bDisableTimeout = false; 
     
     GetCharacterMovement()->ApplyRootMotionSource(JumpForce);
-
-    // 점프 상태 전환
-    CurrentState = ECharacterState::Jump;
-
-    if (animInstance)
-    {
-        animInstance->bIsJumping = true;
-    }
     
+}
+
+void ABaseCharacter::SetCharacterState(ECharacterState NewState)
+{
+    if (CurrentState == NewState)
+        return;
+
+    CurrentState = NewState;
+
+    UE_LOG(LogTemp, Log, TEXT("change sate to %s"), *UEnum::GetValueAsString(NewState));
 }
 
 void ABaseCharacter::MoveAction(const FInputActionValue& Value)
 {
-    FVector2D StickInput = Value.Get<FVector2D>();
-    const float HorizontalDeadzone = 0.2f;
+    //FVector2D StickInput = Value.Get<FVector2D>();
+    //const float HorizontalDeadzone = 0.2f;
 
-    if (CurrentState == ECharacterState::Attack ||
-        CurrentState == ECharacterState::Jump ||
-        CurrentState == ECharacterState::Crunch)
-    {
-        return;
-    }
+    //if (CurrentState == ECharacterState::Attack ||
+    //    CurrentState == ECharacterState::Jump ||
+    //    CurrentState == ECharacterState::Crunch)
+    //{
+    //    return;
+    //}
 
-    // 좌우 이동
-    if (FMath::Abs(StickInput.X) > HorizontalDeadzone)
-    {
-        AddMovementInput(GetActorForwardVector(), StickInput.X);
-        if (CurrentState != ECharacterState::Walking)
-        {
-            CurrentState = ECharacterState::Walking;
-        }
-    }
+    //// 좌우 이동
+    //if (FMath::Abs(StickInput.X) > HorizontalDeadzone)
+    //{
+    //    AddMovementInput(GetActorForwardVector(), StickInput.X);
+    //    if (CurrentState != ECharacterState::Walking)
+    //    {
+    //        CurrentState = ECharacterState::Walking;
+    //    }
+    //}
 
-    else if (FMath::Abs(StickInput.X) < HorizontalDeadzone)
-    {
-        if (CurrentState != ECharacterState::Idle && CurrentState != ECharacterState::Jump
-            && CurrentState != ECharacterState::Attack)
-        {
-            CurrentState = ECharacterState::Idle;
-        }
-    }
+    //else if (FMath::Abs(StickInput.X) < HorizontalDeadzone)
+    //{
+    //    if (CurrentState != ECharacterState::Idle && CurrentState != ECharacterState::Jump
+    //        && CurrentState != ECharacterState::Attack)
+    //    {
+    //        CurrentState = ECharacterState::Idle;
+    //    }
+    //}
 }
 
 void ABaseCharacter::AttackAction(const FInputActionValue& Value)
@@ -410,48 +444,127 @@ void ABaseCharacter::AttackAction(const FInputActionValue& Value)
 
 void ABaseCharacter::JumpAction(const FInputActionValue& Value)
 {
-    FVector2D StickInput = Value.Get<FVector2D>();
+    const FVector2D StickInput = Value.Get<FVector2D>();
+    const float Deadzone = 0.2f;
+    const float JumpThreshold = 0.7f;
+    const float CrouchThreshold = -0.5f;
+
+    const FVector ForwardDir = GetActorForwardVector();
+    const float ForwardX = ForwardDir.X;
+
+    // === 1. 좌우 입력 처리 ===
+    float AdjustedX = StickInput.X * FMath::Sign(ForwardX);  // 방향 반전 고려
+
+    if (FMath::Abs(AdjustedX) > Deadzone)
+    {
+        ECommandInput DirInput = (AdjustedX > 0) ? ECommandInput::Forward : ECommandInput::Backward;
+
+        if (LastHorizontalInput != DirInput)
+        {
+            HandleInput(DirInput);
+            LastHorizontalInput = DirInput;
+        }
+
+        if (CurrentState != ECharacterState::Crunch &&
+            CurrentState != ECharacterState::Jump)
+        {
+            AddMovementInput(ForwardDir, AdjustedX);
+            if (CurrentState == ECharacterState::Idle)
+            {
+                SetCharacterState(ECharacterState::Walking);
+            }
+        }
+    }
+    else
+    {
+        LastHorizontalInput = ECommandInput::None;
+        if (CurrentState == ECharacterState::Walking)
+        {
+            SetCharacterState(ECharacterState::Idle);
+        }
+    }
+
+    // === 2. 위 방향 입력 (점프) ===
+    if (StickInput.Y >= JumpThreshold && LastVerticalInput != ECommandInput::Jump)
+    {
+        HandleInput(ECommandInput::Jump);
+        LastVerticalInput = ECommandInput::Jump;
+
+        if (CurrentState != ECharacterState::Attack &&
+            CurrentState != ECharacterState::Jump &&
+            animInstance && !animInstance->bIsJumping)
+        {
+            PlayRootMotionJump();
+            SetCharacterState(ECharacterState::Jump);
+        }
+    }
+
+    // === 3. 아래 방향 입력 (크런치) ===
+    else if (StickInput.Y <= CrouchThreshold && LastVerticalInput != ECommandInput::Crunch)
+    {
+        HandleInput(ECommandInput::Crunch);
+        LastVerticalInput = ECommandInput::Crunch;
+
+        if (CurrentState != ECharacterState::Crunch)
+        {
+            SetCharacterState(ECharacterState::Crunch);
+        }
+    }
+
+    // === 4. 중립으로 돌아왔을 때 초기화 ===
+    else if (FMath::Abs(StickInput.Y) < Deadzone)
+    {
+        LastVerticalInput = ECommandInput::None;
+
+        if (CurrentState != ECharacterState::Idle &&
+            CurrentState != ECharacterState::Attack &&
+            CurrentState != ECharacterState::Jump &&
+            CurrentState != ECharacterState::Walking)
+        {
+            SetCharacterState(ECharacterState::Idle);
+        }
+    }
 }
 
 void ABaseCharacter::CrunchAction(const FInputActionValue& Value)
 {
-    FVector2D StickInput = Value.Get<FVector2D>();
-    const float JumpThreshold = 0.7f;
-    const float VerticalDeadzone = 0.2f;
-    const float DownThreshold = -0.5f;
+    //FVector2D StickInput = Value.Get<FVector2D>();
+    //const float JumpThreshold = 0.7f;
+    //const float VerticalDeadzone = 0.2f;
+    //const float DownThreshold = -0.5f;
 
-    if (StickInput.Y >= JumpThreshold)
-    {
-        HandleInput(ECommandInput::Jump);
-        if (CurrentState == ECharacterState::Attack)
-        {
-            return;
-        }
+    //if (StickInput.Y >= JumpThreshold)
+    //{
+    //    HandleInput(ECommandInput::Jump);
+    //    if (CurrentState == ECharacterState::Attack)
+    //    {
+    //        return;
+    //    }
 
-        if (CurrentState != ECharacterState::Jump && !animInstance->bIsJumping)
-        {
-            PlayRootMotionJump();
-        }
-    }
+    //    if (CurrentState != ECharacterState::Jump && !animInstance->bIsJumping)
+    //    {
+    //        PlayRootMotionJump();
+    //    }
+    //}
 
-    // 아래 방향 입력: 수그리기 상태
-    if (StickInput.Y < DownThreshold)
-    {
-        if (CurrentState != ECharacterState::Crunch)
-        {
-            HandleInput(ECommandInput::Crunch);
-            CurrentState = ECharacterState::Crunch;
-        }
-    }
+    //// 아래 방향 입력: 수그리기 상태
+    //if (StickInput.Y < DownThreshold)
+    //{
+    //    if (CurrentState != ECharacterState::Crunch)
+    //    {
+    //        HandleInput(ECommandInput::Crunch);
+    //        CurrentState = ECharacterState::Crunch;
+    //    }
+    //}
 
-    else if (FMath::Abs(StickInput.Y) < VerticalDeadzone)
-    {
-        if (CurrentState != ECharacterState::Idle && CurrentState != ECharacterState::Jump
-            && CurrentState != ECharacterState::Attack && CurrentState != ECharacterState::Walking)
-        {
-            CurrentState = ECharacterState::Idle;
-        }
-    }
+    //else if (FMath::Abs(StickInput.Y) < VerticalDeadzone)
+    //{
+    //    if (CurrentState != ECharacterState::Idle && CurrentState != ECharacterState::Jump
+    //        && CurrentState != ECharacterState::Attack && CurrentState != ECharacterState::Walking)
+    //    {
+    //        CurrentState = ECharacterState::Idle;
+    //    }
+    //}
 }
 
 void ABaseCharacter::CrunchReleased(const FInputActionValue& Value)
@@ -499,59 +612,121 @@ void ABaseCharacter::Landed(const FHitResult& Hit)
 
 void ABaseCharacter::ForwardAction(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>())
-    {
-        return;
-    }
-    HandleInput(ECommandInput::Forward);
+    //FVector Stick = Value.Get<FVector>();
+    //const float Deadzone = 0.2f;
+
+    //if (CurrentState == ECharacterState::Attack ||
+    //    CurrentState == ECharacterState::Jump ||
+    //    CurrentState == ECharacterState::Crunch)
+    //{
+    //    return;
+    //}
+
+    //// 스틱 중립: IDLE 상태로 전환
+    //if (FMath::Abs(Stick.X) < Deadzone)
+    //{
+    //    // 단, 공격/점프 등 중에는 상태 유지
+    //    if (CurrentState != ECharacterState::Attack &&
+    //        CurrentState != ECharacterState::Jump &&
+    //        CurrentState != ECharacterState::Crunch)
+    //    {
+    //        SetCharacterState(ECharacterState::Idle);
+    //    }
+
+    //    // 방향 입력 초기화
+    //    LastDirectionalInput = ECommandInput::None;
+    //    return;
+    //}
+
+    //// 스틱 입력 있음: 이동 처리
+    //float FacingX = GetActorForwardVector().X;
+    //float AdjustedInputX = Stick.X * FacingX;
+
+    //FVector MoveDir = GetActorForwardVector() * FMath::Sign(AdjustedInputX);
+    //AddMovementInput(MoveDir, 1.0f);
+
+    //// 상태 전이: 이동 중이라면 Walking
+    //if (CurrentState == ECharacterState::Idle)
+    //{
+    //    SetCharacterState(ECharacterState::Walking);
+    //}
+
+    //// 방향 입력 버퍼 처리
+    //ECommandInput CurrentInput = (AdjustedInputX > 0) ? ECommandInput::Forward : ECommandInput::Backward;
+    //if (CurrentInput != LastDirectionalInput)
+    //{
+    //    HandleInput(CurrentInput);
+    //    LastDirectionalInput = CurrentInput;
+    //}
 }
 
 void ABaseCharacter::BackwardAction(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>())
-    {
-        return;
-    }
-    HandleInput(ECommandInput::Backward);
+    FVector Stick = Value.Get<FVector>();
+    const float Deadzone = 0.2f;
 }
 
 void ABaseCharacter::LeftPunchAction(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>() || CurrentState != ECharacterState::Idle)
+    if (!Value.Get<bool>())
     {
         return;
     }
+
+    if (CurrentState != ECharacterState::Idle &&
+        CurrentState != ECharacterState::Crunch)
+    {
+        return;
+    }
+
     HandleInput(ECommandInput::A);
-    CurrentState = ECharacterState::Attack;
 }
 
 void ABaseCharacter::RightPunchAction(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>() || CurrentState != ECharacterState::Idle )
+    if (!Value.Get<bool>())
     {
         return;
     }
+
+    if (CurrentState != ECharacterState::Idle &&
+        CurrentState != ECharacterState::Crunch)
+    {
+        return;
+    }
+
     HandleInput(ECommandInput::B);
-    CurrentState = ECharacterState::Attack;
 }
 
 void ABaseCharacter::LeftKickAction(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>() || CurrentState != ECharacterState::Idle)
+    if (!Value.Get<bool>())
     {
         return;
     }
+
+    if (CurrentState != ECharacterState::Idle &&
+        CurrentState != ECharacterState::Crunch)
+    {
+        return;
+    }
+
     HandleInput(ECommandInput::X);
-    CurrentState = ECharacterState::Attack;
 
 }
 
 void ABaseCharacter::RightKickAction(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>() || CurrentState != ECharacterState::Idle)
+    if (!Value.Get<bool>())
     {
         return;
     }
+
+    if (CurrentState != ECharacterState::Idle &&
+        CurrentState != ECharacterState::Crunch)
+    {
+        return;
+    }
+
     HandleInput(ECommandInput::Y);
-    CurrentState = ECharacterState::Attack;
 }

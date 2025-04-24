@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
 #include "HitboxComponent.h"
+#include "BaseCharacter.h"
 #include "AN_SpawnHitBox.generated.h"
 
 /**
@@ -28,6 +29,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float Damage = 10.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		EAttackType AttackType = EAttackType::Mid;
 
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };
