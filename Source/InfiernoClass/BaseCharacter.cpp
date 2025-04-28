@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "MotionWarpingComponent.h"
 #include "GameFramework/RootMotionSource.h"
+#include <Kismet/GameplayStatics.h>
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -110,7 +111,7 @@ void ABaseCharacter::ClearWarpTarget(FName TargetName)
     }
 }
 
-void ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
+bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
 {
     // === 상단 공격 처리 ===
     if (AttackType == EAttackType::High)
@@ -118,7 +119,7 @@ void ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
         if (CurrentState == ECharacterState::Crunch)
         {
             UE_LOG(LogTemp, Log, TEXT("%s avoided high attack by crouching!"), *GetName());
-            return; // 공격 무효
+            return false; // 공격 무효
         }
 
         if (LastHorizontalInput == ECommandInput::Backward)
@@ -126,7 +127,7 @@ void ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
             SetCharacterState(ECharacterState::Block);
             PlayAnimMontageSafe(HighBlockMontage, false);
             UE_LOG(LogTemp, Log, TEXT("%s blocked high attack!"), *GetName());
-            return; // 블로킹 성공
+            return false; // 블로킹 성공
         }
     }
 
@@ -138,7 +139,7 @@ void ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
             SetCharacterState(ECharacterState::Block);
             PlayAnimMontageSafe(MidBlockMontage, false);
             UE_LOG(LogTemp, Log, TEXT("%s blocked mid attack!"), *GetName());
-            return; // 블로킹 성공
+            return false; // 블로킹 성공
         }
     }
 
@@ -148,17 +149,47 @@ void ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
         if (CurrentState == ECharacterState::Jump)
         {
             UE_LOG(LogTemp, Log, TEXT("%s avoided low attack by jumping!"), *GetName());
-            return; // 점프로 회피 성공
+            return false; // 점프로 회피 성공
         }
         if (CurrentState == ECharacterState::Crunch)
         {
             SetCharacterState(ECharacterState::Block);
             PlayAnimMontageSafe(LowBlockMontage, true);
+            return false;
         }
     }
 
-    // === 데미지 처리 ===
-    UE_LOG(LogTemp, Warning, TEXT("%s took %.1f damage!"), *GetName(), Damage);
+    if (HitEffect)
+    {
+        FName SpawnSocketName;
+
+        switch (AttackType)
+        {
+        case EAttackType::High:
+            SpawnSocketName = HitEffectSocket_High;
+            break;
+        case EAttackType::Mid:
+            SpawnSocketName = HitEffectSocket_Mid;
+            break;
+        case EAttackType::Low:
+            SpawnSocketName = HitEffectSocket_Low;
+            break;
+        default:
+            SpawnSocketName = NAME_None;
+            break;
+        }
+
+        if (SpawnSocketName != NAME_None)
+        {
+            UNiagaraSystem* NiagaraEffect = HitEffect;
+            if (NiagaraEffect)
+            {
+                FVector SpawnLoc = GetMesh()->GetSocketLocation(SpawnSocketName);
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraEffect, SpawnLoc);
+            }
+        }
+    }
+    return true;
 }
 
 ECharacterState ABaseCharacter::GetCharacterState() const

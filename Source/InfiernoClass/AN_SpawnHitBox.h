@@ -33,5 +33,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EAttackType AttackType = EAttackType::Mid;
 
+	UPROPERTY(EditAnywhere, Category = "Animation")
+		UNiagaraSystem* AttackEffect;
+
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };

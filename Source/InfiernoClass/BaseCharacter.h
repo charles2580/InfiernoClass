@@ -9,6 +9,8 @@
 #include "PlayerAnimInstance.h"
 #include "HitboxComponent.h"
 #include "GameFramework/RootMotionSource.h"
+#include "NiagaraSystem.h"             
+#include "NiagaraFunctionLibrary.h"  
 #include "BaseCharacter.generated.h"
 
 class UInputMappingContext;
@@ -170,7 +172,7 @@ public:
 	void SetWarpTarget(FName TargetName, const FTransform& TargetTransform);
 	void ClearWarpTarget(FName TargetName);
 
-	void ApplyDamage(float Damage, EAttackType AttackType);
+	bool ApplyDamage(float Damage, EAttackType AttackType);
 
 	//TScriptInterface<IBaseState> CurrentState;
 
@@ -202,7 +204,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void StartCommand(FString CommandName);
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TArray<FInputInfo> inputBuffer;
 
@@ -217,6 +218,20 @@ protected:
 
 	FTimerHandle inputBufferTimerHandle;
 	float removeInputFromBufferTime;
+
+	// 공격당했을 때 사용할 이펙트
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
+		UNiagaraSystem* HitEffect;
+
+	// 공격당했을 때 사용할 소켓 이름들
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
+		FName HitEffectSocket_High = "HeadSocket";
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
+		FName HitEffectSocket_Mid = "SpineSocket";
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
+		FName HitEffectSocket_Low = "PelvisSocket";
 
 private:
 

@@ -46,7 +46,12 @@ void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 				UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
 				if (ABaseCharacter* Target = Cast<ABaseCharacter>(HitActor))
 				{
-					Target->ApplyDamage(Damage, AttackType);
+					bool bHitSuccessful = Target->ApplyDamage(Damage, AttackType);
+					if (bHitSuccessful)
+					{
+						FVector SpawnLoc = Start;
+						UNiagaraFunctionLibrary::SpawnSystemAtLocation(MeshComp->GetWorld(), AttackEffect, SpawnLoc);
+					}
 				}
 			}
 		}
