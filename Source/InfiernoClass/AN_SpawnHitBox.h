@@ -29,7 +29,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float Damage = 10.f;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool isAirborneAttack = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EAttackType AttackType = EAttackType::Mid;
 

@@ -124,7 +124,7 @@ protected:
 		UAnimMontage* LowBlockMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-	UAnimMontage* L_PunchMontage;
+	UAnimMontage* AirborneDamagedMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
 	UAnimMontage* Combo1Montage;
@@ -172,7 +172,7 @@ public:
 	void SetWarpTarget(FName TargetName, const FTransform& TargetTransform);
 	void ClearWarpTarget(FName TargetName);
 
-	bool ApplyDamage(float Damage, EAttackType AttackType);
+	bool ApplyDamage(float Damage, EAttackType AttackType, bool bCasuesAirborne);
 
 	//TScriptInterface<IBaseState> CurrentState;
 
@@ -245,6 +245,9 @@ private:
 
 	bool bIsWaitingForInput = false;
 	bool bIsPlayingMontage = false;
+	float airbornegauge = 100.0f;
+	//float maxAirbornegauge = 100.0f;
+
 	FInputInfo pendingInput;
 	FTimerHandle InputConfirmHandle;
 
@@ -256,6 +259,9 @@ private:
 
 	void PlayAnimSafe(UAnimMontage* MontageToPlay);
 	void PlayRootMotionJump();
+
+	void LaunchCharacterAirborne(FVector LaunchVelocity);
+	void PlayRootMotionAirborne();
 
 	void SetCharacterState(ECharacterState NewState);
 

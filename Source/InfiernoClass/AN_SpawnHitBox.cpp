@@ -46,7 +46,7 @@ void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 				UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
 				if (ABaseCharacter* Target = Cast<ABaseCharacter>(HitActor))
 				{
-					bool bHitSuccessful = Target->ApplyDamage(Damage, AttackType);
+					bool bHitSuccessful = Target->ApplyDamage(Damage, AttackType, isAirborneAttack);
 					if (bHitSuccessful)
 					{
 						FVector SpawnLoc = Start;

@@ -111,7 +111,7 @@ void ABaseCharacter::ClearWarpTarget(FName TargetName)
     }
 }
 
-bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
+bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCasuesAriborne)
 {
     // === 상단 공격 처리 ===
     if (AttackType == EAttackType::High)
@@ -188,6 +188,25 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType)
                 UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraEffect, SpawnLoc);
             }
         }
+
+        if (CurrentState == ECharacterState::Airbone)
+        {
+            if (airbornegauge > 0)
+            {
+                LaunchCharacterAirborne(FVector(50.0f, 0.0f, 300.0f));
+                airbornegauge -= 50.0f;
+                PlayAnimMontageSafe(AirborneDamagedMontage, false);
+            }
+            return true;
+        }
+
+        if (bCasuesAriborne && CurrentState !=ECharacterState::Airbone)
+        {
+            LaunchCharacterAirborne(FVector(100.0f, 0.0f, 400.0f));
+            PlayAnimMontageSafe(AirborneDamagedMontage, false);
+            return true;
+        }
+        
     }
     return true;
 }
@@ -408,8 +427,10 @@ void ABaseCharacter::PlayAnimSafe(UAnimMontage* MontageToPlay)
 
 void ABaseCharacter::PlayRootMotionJump()
 {
-    if (!GetCharacterMovement()) return;
-
+    if (!GetCharacterMovement()) 
+    {
+        return;
+    }
     TSharedPtr<FRootMotionSource_JumpForce> JumpForce = MakeShared<FRootMotionSource_JumpForce>();
     JumpForce->InstanceName = FName("RootMotion_JumpForce");
     JumpForce->AccumulateMode = ERootMotionAccumulateMode::Override;
@@ -421,6 +442,37 @@ void ABaseCharacter::PlayRootMotionJump()
     
     GetCharacterMovement()->ApplyRootMotionSource(JumpForce);
     
+}
+
+void ABaseCharacter::LaunchCharacterAirborne(FVector LaunchVelocity)
+{
+    if (CurrentState != ECharacterState::Airbone)
+    {
+        SetCharacterState(ECharacterState::Airbone);
+    }
+    UE_LOG(LogTemp, Warning, TEXT("Launch: Set to Airbone, current = %d"), (int32)CurrentState);
+    GetCharacterMovement()->RemoveRootMotionSource(FName("RootMotion_AirborneForce"));
+    PlayRootMotionAirborne();
+}
+
+void ABaseCharacter::PlayRootMotionAirborne()
+{
+    if (!GetCharacterMovement())
+    {
+        return;
+    }
+    float direction = (GetActorForwardVector().X > 0) ? -1.0f : 1.0f;
+
+    TSharedPtr<FRootMotionSource_JumpForce> AirborneForce = MakeShared<FRootMotionSource_JumpForce>();
+    AirborneForce->InstanceName = FName("RootMotion_AirborneForce");
+    AirborneForce->AccumulateMode = ERootMotionAccumulateMode::Override;
+    AirborneForce->Priority = 10;
+    AirborneForce->Duration = 1.2f;
+    AirborneForce->Distance = 50.0f * direction;
+    AirborneForce->Height = 100.0f;
+    AirborneForce->bDisableTimeout = false;
+
+    GetCharacterMovement()->ApplyRootMotionSource(AirborneForce);
 }
 
 void ABaseCharacter::SetCharacterState(ECharacterState NewState)
@@ -490,6 +542,8 @@ void ABaseCharacter::JumpAction(const FInputActionValue& Value)
     {
         ECommandInput DirInput = (AdjustedX > 0) ? ECommandInput::Forward : ECommandInput::Backward;
 
+        animInstance->directionX = (AdjustedX > 0) ? 1.0f : -1.0f;
+
         if (LastHorizontalInput != DirInput)
         {
             HandleInput(DirInput);
@@ -550,7 +604,8 @@ void ABaseCharacter::JumpAction(const FInputActionValue& Value)
         if (CurrentState != ECharacterState::Idle &&
             CurrentState != ECharacterState::Attack &&
             CurrentState != ECharacterState::Jump &&
-            CurrentState != ECharacterState::Walking)
+            CurrentState != ECharacterState::Walking &&
+            CurrentState != ECharacterState::Airbone)
         {
             SetCharacterState(ECharacterState::Idle);
         }
@@ -629,15 +684,17 @@ void ABaseCharacter::Landed(const FHitResult& Hit)
 {
     Super::Landed(Hit);
 
-    if (CurrentState == ECharacterState::Jump)
+    if (CurrentState == ECharacterState::Jump ||CurrentState == ECharacterState::Airbone)
     {
-        CurrentState = ECharacterState::Idle;
+        SetCharacterState(ECharacterState::Idle);
         if (animInstance)
         {
             animInstance->bIsJumping = false;
         }
+        airbornegauge = 100.0f;
         UE_LOG(LogTemp, Warning, TEXT("is landed"));
         GetCharacterMovement()->RemoveRootMotionSource(FName("RootMotion_JumpForce"));
+        GetCharacterMovement()->RemoveRootMotionSource(FName("RootMotion_AirborneForce"));
     }
 }
 

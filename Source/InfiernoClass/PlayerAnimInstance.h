@@ -25,7 +25,8 @@ public:
 	bool bIsBlocking;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	float Speed;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+		float directionX;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 private:
