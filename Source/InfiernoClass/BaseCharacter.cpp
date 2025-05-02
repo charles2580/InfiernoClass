@@ -113,6 +113,11 @@ void ABaseCharacter::ClearWarpTarget(FName TargetName)
 
 bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCasuesAriborne)
 {
+    if (CurrentState == ECharacterState::NockDown)
+    {
+        return false;
+    }
+
     // === 상단 공격 처리 ===
     if (AttackType == EAttackType::High)
     {
@@ -125,6 +130,12 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
         if (LastHorizontalInput == ECommandInput::Backward)
         {
             SetCharacterState(ECharacterState::Block);
+            SpawnSocketName = HitEffectSocket_High;
+            if (SpawnSocketName != NAME_None && HitEffect)
+            {
+                FVector SpawnLoc = GetMesh()->GetSocketLocation(SpawnSocketName);
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, SpawnLoc);
+            }
             PlayAnimMontageSafe(HighBlockMontage, false);
             UE_LOG(LogTemp, Log, TEXT("%s blocked high attack!"), *GetName());
             return false; // 블로킹 성공
@@ -137,6 +148,12 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
         if (LastHorizontalInput == ECommandInput::Backward)
         {
             SetCharacterState(ECharacterState::Block);
+            SpawnSocketName = HitEffectSocket_Mid;
+            if (SpawnSocketName != NAME_None && HitEffect)
+            {
+                FVector SpawnLoc = GetMesh()->GetSocketLocation(SpawnSocketName);
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, SpawnLoc);
+            }
             PlayAnimMontageSafe(MidBlockMontage, false);
             UE_LOG(LogTemp, Log, TEXT("%s blocked mid attack!"), *GetName());
             return false; // 블로킹 성공
@@ -154,61 +171,37 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
         if (CurrentState == ECharacterState::Crunch)
         {
             SetCharacterState(ECharacterState::Block);
+            SpawnSocketName = HitEffectSocket_Low;
+            if (SpawnSocketName != NAME_None && HitEffect)
+            {
+                FVector SpawnLoc = GetMesh()->GetSocketLocation(SpawnSocketName);
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, SpawnLoc);
+            }
             PlayAnimMontageSafe(LowBlockMontage, true);
             return false;
         }
     }
 
-    if (HitEffect)
+    if (CurrentState == ECharacterState::Airbone)
     {
-        FName SpawnSocketName;
-
-        switch (AttackType)
+        if (airbornegauge > 0)
         {
-        case EAttackType::High:
-            SpawnSocketName = HitEffectSocket_High;
-            break;
-        case EAttackType::Mid:
-            SpawnSocketName = HitEffectSocket_Mid;
-            break;
-        case EAttackType::Low:
-            SpawnSocketName = HitEffectSocket_Low;
-            break;
-        default:
-            SpawnSocketName = NAME_None;
-            break;
-        }
-
-        if (SpawnSocketName != NAME_None)
-        {
-            UNiagaraSystem* NiagaraEffect = HitEffect;
-            if (NiagaraEffect)
-            {
-                FVector SpawnLoc = GetMesh()->GetSocketLocation(SpawnSocketName);
-                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraEffect, SpawnLoc);
-            }
-        }
-
-        if (CurrentState == ECharacterState::Airbone)
-        {
-            if (airbornegauge > 0)
-            {
-                LaunchCharacterAirborne(100.0f, 100.0f, 0.7f, true);
-                airbornegauge -= 50.0f;
-                UE_LOG(LogTemp, Warning, TEXT("Launch: Set to Airbone, current = %d"), (int32)CurrentState);
-                PlayAnimMontageSafe(AirborneDamagedMontage, false);
-            }
-            return true;
-        }
-
-        if (bCasuesAriborne && CurrentState !=ECharacterState::Airbone)
-        {
-            LaunchCharacterAirborne(100.0f, 250.0f, 0.9f, false);
+            LaunchCharacterAirborne(100.0f, 100.0f, 0.7f, true);
+            airbornegauge -= 50.0f;
+            UE_LOG(LogTemp, Warning, TEXT("Launch: Set to Airbone, current = %d"), (int32)CurrentState);
             PlayAnimMontageSafe(AirborneDamagedMontage, false);
-            return true;
         }
-        
+        return true;
     }
+
+    if (bCasuesAriborne && CurrentState !=ECharacterState::Airbone)
+    {
+        LaunchCharacterAirborne(100.0f, 250.0f, 0.9f, false);
+        PlayAnimMontageSafe(AirborneDamagedMontage, false);
+        return true;
+    }
+        
+    
     return true;
 }
 
@@ -556,7 +549,10 @@ void ABaseCharacter::JumpAction(const FInputActionValue& Value)
         }
 
         if (CurrentState != ECharacterState::Crunch &&
-            CurrentState != ECharacterState::Jump)
+            CurrentState != ECharacterState::Jump &&
+            CurrentState != ECharacterState::Attack &&
+            CurrentState != ECharacterState::Airbone &&
+            CurrentState != ECharacterState::NockDown)
         {
             AddMovementInput(ForwardDir, AdjustedX);
             if (CurrentState == ECharacterState::Idle)

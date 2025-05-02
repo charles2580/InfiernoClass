@@ -252,6 +252,8 @@ private:
 
 	TArray<FInputInfo> InputQueue;
 
+	FName SpawnSocketName;
+
 	bool bIsWaitingForInput = false;
 	bool bIsPlayingMontage = false;
 	float airbornegauge = 100.0f;
