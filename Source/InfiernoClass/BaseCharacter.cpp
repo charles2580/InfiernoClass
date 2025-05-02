@@ -193,7 +193,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
         {
             if (airbornegauge > 0)
             {
-                LaunchCharacterAirborne(100.0f, 100.0f, 0.7f);
+                LaunchCharacterAirborne(100.0f, 100.0f, 0.7f, true);
                 airbornegauge -= 50.0f;
                 UE_LOG(LogTemp, Warning, TEXT("Launch: Set to Airbone, current = %d"), (int32)CurrentState);
                 PlayAnimMontageSafe(AirborneDamagedMontage, false);
@@ -203,7 +203,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
 
         if (bCasuesAriborne && CurrentState !=ECharacterState::Airbone)
         {
-            LaunchCharacterAirborne(100.0f, 200.0f, 0.6f);
+            LaunchCharacterAirborne(100.0f, 200.0f, 0.6f, false);
             PlayAnimMontageSafe(AirborneDamagedMontage, false);
             return true;
         }
@@ -439,28 +439,32 @@ void ABaseCharacter::PlayRootMotionJump()
     JumpForce->Duration = 0.9f;
     JumpForce->Distance = 0.0f;
     JumpForce->Height = 100.0f;
+    JumpForce->PathOffsetCurve = JumpCurve;
     JumpForce->bDisableTimeout = false; 
     
     GetCharacterMovement()->ApplyRootMotionSource(JumpForce);
     
 }
 
-void ABaseCharacter::LaunchCharacterAirborne(float Distance, float Height, float Duration)
+void ABaseCharacter::LaunchCharacterAirborne(float Distance, float Height, float Duration, bool bIsChainHit)
 {
     if (CurrentState != ECharacterState::Airbone)
     {
         SetCharacterState(ECharacterState::Airbone);
     }
     GetCharacterMovement()->RemoveRootMotionSource(FName("RootMotion_AirborneForce"));
-    PlayRootMotionAirborne(Distance, Height, Duration);
+    PlayRootMotionAirborne(Distance, Height, Duration, bIsChainHit);
 }
 
-void ABaseCharacter::PlayRootMotionAirborne(float Distance, float Height, float Duration)
+void ABaseCharacter::PlayRootMotionAirborne(float Distance, float Height, float Duration, bool bIsChainHit)
 {
     if (!GetCharacterMovement())
     {
         return;
     }
+
+    UCurveVector* SelectedCurve = bIsChainHit ? ChainAirborneCurve : InitialAirborneCurve;
+
     float direction = (GetActorForwardVector().X > 0) ? -1.0f : 1.0f;
 
     TSharedPtr<FRootMotionSource_JumpForce> AirborneForce = MakeShared<FRootMotionSource_JumpForce>();
@@ -470,6 +474,7 @@ void ABaseCharacter::PlayRootMotionAirborne(float Distance, float Height, float 
     AirborneForce->Duration = Duration;
     AirborneForce->Distance = Distance * direction;
     AirborneForce->Height = Height;
+    AirborneForce->PathOffsetCurve = SelectedCurve;
     AirborneForce->bDisableTimeout = false;
 
     GetCharacterMovement()->ApplyRootMotionSource(AirborneForce);

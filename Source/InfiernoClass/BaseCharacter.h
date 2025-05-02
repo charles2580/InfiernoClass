@@ -60,10 +60,10 @@ struct FInputInfo
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	ECommandInput inputName;
+		ECommandInput inputName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	float timeStamp;
+		float timeStamp;
 };
 
 USTRUCT(BlueprintType)
@@ -73,16 +73,16 @@ struct FCommand
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	FString name;
+		FString name;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	TArray<ECommandInput> inputs;
+		TArray<ECommandInput> inputs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	bool hasUsedCommand;
+		bool hasUsedCommand;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UAnimMontage* ComboAttackMontage;
+		UAnimMontage* ComboAttackMontage;
 };
 
 UCLASS()
@@ -100,22 +100,22 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	class UInputAction* IA_MoveForward;
+		class UInputAction* IA_MoveForward;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	class UInputAction* IA_Jump;
+		class UInputAction* IA_Jump;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	class UInputAction* IA_Crouch;
+		class UInputAction* IA_Crouch;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-	UAnimMontage* DamagedMontage;
+		UAnimMontage* DamagedMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-	UAnimMontage* JumpMontage;
+		UAnimMontage* JumpMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-	UAnimMontage* HighBlockMontage;
+		UAnimMontage* HighBlockMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
 		UAnimMontage* MidBlockMontage;
@@ -124,18 +124,18 @@ protected:
 		UAnimMontage* LowBlockMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-	UAnimMontage* AirborneDamagedMontage;
+		UAnimMontage* AirborneDamagedMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-	UAnimMontage* Combo1Montage;
+		UAnimMontage* Combo1Montage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-	UAnimMontage* Combo2Montage;
+		UAnimMontage* Combo2Montage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Motion Warping")
-	class UMotionWarpingComponent* MotionWarpingComponent;
+		class UMotionWarpingComponent* MotionWarpingComponent;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -162,12 +162,12 @@ public:
 
 
 	UFUNCTION(BlueprintCallable)
-	void RemoveInputFromInputBuffer();
+		void RemoveInputFromInputBuffer();
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	float GetSpeed() const;
+		float GetSpeed() const;
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool GetBlock() const;
+		bool GetBlock() const;
 
 	void SetWarpTarget(FName TargetName, const FTransform& TargetTransform);
 	void ClearWarpTarget(FName TargetName);
@@ -180,41 +180,50 @@ public:
 	UStateManager* StateManager;*/
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
-	float Speed;
+		float Speed;
 	UPROPERTY(EditAnywhere, Category = "Animation")
-	bool Block;
+		bool Block;
 
 	UPROPERTY(BluePrintReadWrite, Category = "CharacterState")
-	ECharacterState CurrentState = ECharacterState::Idle;
+		ECharacterState CurrentState = ECharacterState::Idle;
 
 	UFUNCTION(BlueprintCallable, Category = "CharacterState")
-	ECharacterState GetCharacterState() const;
+		ECharacterState GetCharacterState() const;
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterState")
 		void PlayAnimMontageSafe(UAnimMontage* AnimMontage, bool bIsCrouchAttack);
 
+	UPROPERTY(EditDefaultsOnly, Category = "Curve")
+		UCurveVector* InitialAirborneCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Curve")
+		UCurveVector* ChainAirborneCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Curve")
+		UCurveVector* JumpCurve;
+
 protected:
 
 	UFUNCTION(BlueprintCallable)
-	bool AddInputToInputBuffer(FInputInfo _inputinfo);
+		bool AddInputToInputBuffer(FInputInfo _inputinfo);
 
 	UFUNCTION(BlueprintCallable)
-	bool CheckInputBufferForCommand();
-	
+		bool CheckInputBufferForCommand();
+
 	UFUNCTION(BlueprintCallable)
-	void StartCommand(FString CommandName);
+		void StartCommand(FString CommandName);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	TArray<FInputInfo> inputBuffer;
+		TArray<FInputInfo> inputBuffer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	TArray<FCommand> characterCommands;
+		TArray<FCommand> characterCommands;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TMap<ECommandInput, UAnimMontage*> InputMontageMap;
+		TMap<ECommandInput, UAnimMontage*> InputMontageMap;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	TMap<ECommandInput, UAnimMontage*> CrouchMontageMap;
+		TMap<ECommandInput, UAnimMontage*> CrouchMontageMap;
 
 	FTimerHandle inputBufferTimerHandle;
 	float removeInputFromBufferTime;
@@ -260,8 +269,8 @@ private:
 	void PlayAnimSafe(UAnimMontage* MontageToPlay);
 	void PlayRootMotionJump();
 
-	void LaunchCharacterAirborne(float Distance, float Height, float Duration);
-	void PlayRootMotionAirborne(float Distance, float Height, float Duration);
+	void LaunchCharacterAirborne(float Distance, float Height, float Duration, bool bIsChainHit);
+	void PlayRootMotionAirborne(float Distance, float Height, float Duration, bool bIsChainHit);
 
 	void SetCharacterState(ECharacterState NewState);
 
