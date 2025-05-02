@@ -203,7 +203,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
 
         if (bCasuesAriborne && CurrentState !=ECharacterState::Airbone)
         {
-            LaunchCharacterAirborne(100.0f, 200.0f, 1.1f, false);
+            LaunchCharacterAirborne(100.0f, 250.0f, 0.9f, false);
             PlayAnimMontageSafe(AirborneDamagedMontage, false);
             return true;
         }
@@ -436,7 +436,7 @@ void ABaseCharacter::PlayRootMotionJump()
     JumpForce->InstanceName = FName("RootMotion_JumpForce");
     JumpForce->AccumulateMode = ERootMotionAccumulateMode::Override;
     JumpForce->Priority = 10;
-    JumpForce->Duration = 0.9f;
+    JumpForce->Duration = 0.7f;
     JumpForce->Distance = 0.0f;
     JumpForce->Height = 100.0f;
     JumpForce->PathOffsetCurve = JumpCurve;
