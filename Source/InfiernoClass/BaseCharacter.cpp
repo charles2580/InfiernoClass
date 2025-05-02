@@ -203,7 +203,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
 
         if (bCasuesAriborne && CurrentState !=ECharacterState::Airbone)
         {
-            LaunchCharacterAirborne(100.0f, 200.0f, 0.6f, false);
+            LaunchCharacterAirborne(100.0f, 200.0f, 1.1f, false);
             PlayAnimMontageSafe(AirborneDamagedMontage, false);
             return true;
         }
