@@ -260,8 +260,8 @@ private:
 	void PlayAnimSafe(UAnimMontage* MontageToPlay);
 	void PlayRootMotionJump();
 
-	void LaunchCharacterAirborne(FVector LaunchVelocity);
-	void PlayRootMotionAirborne();
+	void LaunchCharacterAirborne(float Distance, float Height, float Duration);
+	void PlayRootMotionAirborne(float Distance, float Height, float Duration);
 
 	void SetCharacterState(ECharacterState NewState);
 

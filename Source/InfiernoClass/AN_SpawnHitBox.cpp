@@ -51,6 +51,7 @@ void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 					{
 						FVector SpawnLoc = Start;
 						UNiagaraFunctionLibrary::SpawnSystemAtLocation(MeshComp->GetWorld(), AttackEffect, SpawnLoc);
+						return;
 					}
 				}
 			}
