@@ -72,6 +72,7 @@ void AInfiernoClassGameModeBase::StartPlay()
             Pawn0->AutoPossessPlayer = EAutoReceiveInput::Player0;
             Pawn0->FinishSpawning(SpawnTransform0);
 
+            Player1 = Pawn0;
             // Possess()를 0.1초 지연 후 호출
             FTimerHandle TimerHandle0;
             World->GetTimerManager().SetTimer(TimerHandle0, [PC0, Pawn0]()
@@ -141,6 +142,8 @@ void AInfiernoClassGameModeBase::StartPlay()
             MeshComp->SetRelativeScale3D(NewScale);
 
             Pawn1->FinishSpawning(SpawnTransform1);
+
+            Player2 = Pawn1;
 
             // Possess()를 0.1초 지연 후 호출
             FTimerHandle TimerHandle1;
