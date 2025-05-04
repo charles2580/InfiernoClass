@@ -193,6 +193,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "CharacterState")
 		void PlayAnimMontageSafe(UAnimMontage* AnimMontage, bool bIsCrouchAttack);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+		void UpdateHPUI(float HP);
+
 	UPROPERTY(EditDefaultsOnly, Category = "Curve")
 		UCurveVector* InitialAirborneCurve;
 
@@ -202,10 +205,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Curve")
 		UCurveVector* JumpCurve;
 
+	UPROPERTY(BluePrintReadWrite, Category = "UI")
+		UUserWidget* PlayerHUDClass;
+
+	UPROPERTY(BluePrintReadOnly, Category = "CharacterIndex")
+		int CharacterIndex = 0;
 protected:
 
 	UFUNCTION(BlueprintCallable)
 		bool AddInputToInputBuffer(FInputInfo _inputinfo);
+
+	UFUNCTION(BlueprintCallable)
+	void PlayerDie();
 
 	UFUNCTION(BlueprintCallable)
 		bool CheckInputBufferForCommand();
@@ -275,5 +286,8 @@ private:
 	void PlayRootMotionAirborne(float Distance, float Height, float Duration, bool bIsChainHit);
 
 	void SetCharacterState(ECharacterState NewState);
+
+	float MaxHP = 100.0f;
+	float CurrentHP = 100.0f;
 
 };

@@ -29,4 +29,6 @@ public:
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Player References");
 	ABaseCharacter* Player2;
+
+	void OnCharacterDead(ABaseCharacter* DeadCharacter);
 };

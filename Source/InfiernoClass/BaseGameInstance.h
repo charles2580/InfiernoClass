@@ -21,4 +21,10 @@ class INFIERNOCLASS_API UBaseGameInstance : public UGameInstance
 public:
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Player References")
 	ECharacterClass characterClass;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "UI")
+	int32 Player1WinCount = 0;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "UI")
+	int32 Player2WinCount = 0;
 };

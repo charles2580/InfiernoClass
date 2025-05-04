@@ -8,7 +8,8 @@ public class InfiernoClass : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore","EnhancedInput", "Niagara", "MotionWarping" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore",
+			"EnhancedInput", "Niagara", "MotionWarping", "UMG" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

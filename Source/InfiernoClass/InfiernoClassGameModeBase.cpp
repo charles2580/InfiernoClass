@@ -70,9 +70,11 @@ void AInfiernoClassGameModeBase::StartPlay()
         if (Pawn0)
         {
             Pawn0->AutoPossessPlayer = EAutoReceiveInput::Player0;
+            Pawn0->CharacterIndex = 1;
             Pawn0->FinishSpawning(SpawnTransform0);
 
             Player1 = Pawn0;
+            UE_LOG(LogTemp, Log, TEXT("Spawning Player1 Pawn: %s"), *Pawn0->GetName());
             // Possess()를 0.1초 지연 후 호출
             FTimerHandle TimerHandle0;
             World->GetTimerManager().SetTimer(TimerHandle0, [PC0, Pawn0]()
@@ -140,11 +142,11 @@ void AInfiernoClassGameModeBase::StartPlay()
             FVector NewScale = MeshComp->GetRelativeScale3D();
             NewScale.Y *= -1.f;
             MeshComp->SetRelativeScale3D(NewScale);
-
+            Pawn1->CharacterIndex = 2;
             Pawn1->FinishSpawning(SpawnTransform1);
 
             Player2 = Pawn1;
-
+            UE_LOG(LogTemp, Log, TEXT("Spawning Player2 Pawn: %s"), *Pawn1->GetName());
             // Possess()를 0.1초 지연 후 호출
             FTimerHandle TimerHandle1;
             World->GetTimerManager().SetTimer(TimerHandle1, [PC1, Pawn1]()
@@ -165,5 +167,48 @@ void AInfiernoClassGameModeBase::StartPlay()
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("Player 1 Controller does not Possess."));
+    }
+}
+
+void AInfiernoClassGameModeBase::OnCharacterDead(ABaseCharacter* DeadCharacter)
+{
+    UBaseGameInstance* GI = Cast<UBaseGameInstance>(GetGameInstance());
+
+    if (!GI)
+    {
+        return;
+    }
+
+    if (DeadCharacter == Player1)
+    {
+        GI->Player2WinCount++;
+        // HUD에 "Player 2 Wins!" 표시 등
+    }
+    else if (DeadCharacter == Player2)
+    {
+        GI->Player1WinCount++;
+        // HUD에 "Player 1 Wins!" 표시 등
+    }
+
+    const int32 WinLimit = 3;
+    if (GI->Player1WinCount >= WinLimit || GI->Player2WinCount >= WinLimit)
+    {
+        // 최종 승리 처리 (UI 표시 → 메뉴로 전환 등)
+        /*UE_LOG(LogTemp, Warning, TEXT("Final Winner: %s"),
+            (GI->Player1WinCount >= WinLimit ? TEXT("Player 1") : TEXT("Player 2")));*/
+        FTimerHandle RestartHandle;
+        GetWorld()->GetTimerManager().SetTimer(RestartHandle, [this]()
+            {
+                UGameplayStatics::OpenLevel(this, "Level1");
+            }, 1.5f, false);
+    }
+    else
+    {
+        // 다음 라운드 시작을 위해 레벨 재시작
+        FTimerHandle RestartHandle;
+        GetWorld()->GetTimerManager().SetTimer(RestartHandle, [this]()
+            {
+                UGameplayStatics::OpenLevel(this, "PGY");
+            }, 1.5f, false);
     }
 }

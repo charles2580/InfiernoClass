@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "MotionWarpingComponent.h"
 #include "GameFramework/RootMotionSource.h"
+#include "InfiernoClassGameModeBase.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
@@ -113,7 +114,7 @@ void ABaseCharacter::ClearWarpTarget(FName TargetName)
 
 bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCasuesAriborne)
 {
-    if (CurrentState == ECharacterState::NockDown)
+    if (CurrentState == ECharacterState::NockDown || CurrentHP < 0)
     {
         return false;
     }
@@ -181,6 +182,8 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
             return false;
         }
     }
+    
+    CurrentHP -= Damage;
 
     if (CurrentState == ECharacterState::Airbone)
     {
@@ -191,6 +194,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
             UE_LOG(LogTemp, Warning, TEXT("Launch: Set to Airbone, current = %d"), (int32)CurrentState);
             PlayAnimMontageSafe(AirborneDamagedMontage, false);
         }
+        UpdateHPUI(CurrentHP);
         return true;
     }
 
@@ -198,10 +202,11 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
     {
         LaunchCharacterAirborne(100.0f, 250.0f, 0.9f, false);
         PlayAnimMontageSafe(AirborneDamagedMontage, false);
+        UpdateHPUI(CurrentHP);
         return true;
     }
-        
-    
+
+    UpdateHPUI(CurrentHP);
     return true;
 }
 
@@ -481,6 +486,23 @@ void ABaseCharacter::SetCharacterState(ECharacterState NewState)
     CurrentState = NewState;
 
     UE_LOG(LogTemp, Log, TEXT("change sate to %s"), *UEnum::GetValueAsString(NewState));
+}
+
+void ABaseCharacter::PlayerDie()
+{
+    if (CurrentHP <= 0)
+    {
+        APlayerController* PC = Cast<APlayerController>(GetController());
+        if (PC)
+        {
+            DisableInput(PC);
+        }
+        AInfiernoClassGameModeBase* GM = Cast<AInfiernoClassGameModeBase>(GetWorld()->GetAuthGameMode());
+        if (GM)
+        {
+            GM->OnCharacterDead(this);
+        }
+    }
 }
 
 void ABaseCharacter::MoveAction(const FInputActionValue& Value)
