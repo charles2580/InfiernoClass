@@ -573,6 +573,34 @@ void ABaseCharacter::JumpAction(const FInputActionValue& Value)
     // === 1. 좌우 입력 처리 ===
     float AdjustedX = StickInput.X * FMath::Sign(ForwardX);  // 방향 반전 고려
 
+    // === 2. 위 방향 입력 (점프) ===
+    if (StickInput.Y >= JumpThreshold && LastVerticalInput != ECommandInput::Jump)
+    {
+        HandleInput(ECommandInput::Jump);
+        LastVerticalInput = ECommandInput::Jump;
+
+        if (CurrentState != ECharacterState::Attack &&
+            CurrentState != ECharacterState::Jump &&
+            animInstance && !animInstance->bIsJumping)
+        {
+            PlayRootMotionJump();
+            SetCharacterState(ECharacterState::Jump);
+            return;
+        }
+    }
+
+    // === 3. 아래 방향 입력 (크런치) ===
+    else if (StickInput.Y <= CrouchThreshold && LastVerticalInput != ECommandInput::Crunch)
+    {
+        HandleInput(ECommandInput::Crunch);
+        LastVerticalInput = ECommandInput::Crunch;
+
+        if (CurrentState != ECharacterState::Crunch)
+        {
+            SetCharacterState(ECharacterState::Crunch);
+        }
+    }
+
     if (FMath::Abs(AdjustedX) > Deadzone)
     {
         ECommandInput DirInput = (AdjustedX > 0) ? ECommandInput::Forward : ECommandInput::Backward;
@@ -607,35 +635,8 @@ void ABaseCharacter::JumpAction(const FInputActionValue& Value)
         }
     }
 
-    // === 2. 위 방향 입력 (점프) ===
-    if (StickInput.Y >= JumpThreshold && LastVerticalInput != ECommandInput::Jump)
-    {
-        HandleInput(ECommandInput::Jump);
-        LastVerticalInput = ECommandInput::Jump;
-
-        if (CurrentState != ECharacterState::Attack &&
-            CurrentState != ECharacterState::Jump &&
-            animInstance && !animInstance->bIsJumping)
-        {
-            PlayRootMotionJump();
-            SetCharacterState(ECharacterState::Jump);
-        }
-    }
-
-    // === 3. 아래 방향 입력 (크런치) ===
-    else if (StickInput.Y <= CrouchThreshold && LastVerticalInput != ECommandInput::Crunch)
-    {
-        HandleInput(ECommandInput::Crunch);
-        LastVerticalInput = ECommandInput::Crunch;
-
-        if (CurrentState != ECharacterState::Crunch)
-        {
-            SetCharacterState(ECharacterState::Crunch);
-        }
-    }
-
     // === 4. 중립으로 돌아왔을 때 초기화 ===
-    else if (FMath::Abs(StickInput.Y) < Deadzone)
+    if (FMath::Abs(StickInput.Y) < Deadzone)
     {
         LastVerticalInput = ECommandInput::None;
 
