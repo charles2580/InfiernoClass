@@ -114,7 +114,7 @@ void ABaseCharacter::ClearWarpTarget(FName TargetName)
 
 bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCasuesAriborne)
 {
-    if (CurrentState == ECharacterState::NockDown || CurrentHP < 0)
+    if (CurrentState == ECharacterState::NockDown || CurrentHP <= 0)
     {
         return false;
     }
@@ -204,6 +204,21 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
         PlayAnimMontageSafe(AirborneDamagedMontage, false);
         UpdateHPUI(CurrentHP);
         return true;
+    }
+
+    switch (AttackType)
+    {
+    case EAttackType::High:
+        PlayAnimMontageSafe(HighDamagedMontage, false);
+        break;
+    case EAttackType::Mid:
+        PlayAnimMontageSafe(MidDamagedMontage, false);
+        break;
+    case EAttackType::Low:
+        PlayAnimMontageSafe(LowDamagedMontage, true);
+        break;
+    default:
+        break;
     }
 
     UpdateHPUI(CurrentHP);

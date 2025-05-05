@@ -124,6 +124,15 @@ protected:
 		UAnimMontage* LowBlockMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
+		UAnimMontage* HighDamagedMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
+		UAnimMontage* MidDamagedMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
+		UAnimMontage* LowDamagedMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animaiton")
 		UAnimMontage* AirborneDamagedMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
@@ -210,6 +219,10 @@ public:
 
 	UPROPERTY(BluePrintReadOnly, Category = "CharacterIndex")
 		int CharacterIndex = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		TSubclassOf<ACameraActor> SideViewCamClass;
+
 protected:
 
 	UFUNCTION(BlueprintCallable)
