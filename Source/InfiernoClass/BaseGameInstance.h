@@ -27,4 +27,7 @@ public:
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "UI")
 	int32 Player2WinCount = 0;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "UI")
+	int32 GameRound = 0;
 };

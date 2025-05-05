@@ -190,12 +190,17 @@ void AInfiernoClassGameModeBase::OnCharacterDead(ABaseCharacter* DeadCharacter)
         // HUD에 "Player 1 Wins!" 표시 등
     }
 
+    GI->GameRound++;
+
     const int32 WinLimit = 3;
     if (GI->Player1WinCount >= WinLimit || GI->Player2WinCount >= WinLimit)
     {
         // 최종 승리 처리 (UI 표시 → 메뉴로 전환 등)
         /*UE_LOG(LogTemp, Warning, TEXT("Final Winner: %s"),
             (GI->Player1WinCount >= WinLimit ? TEXT("Player 1") : TEXT("Player 2")));*/
+        GI->Player1WinCount = 0;
+        GI->Player2WinCount = 0;
+        GI->GameRound = 0;
         FTimerHandle RestartHandle;
         GetWorld()->GetTimerManager().SetTimer(RestartHandle, [this]()
             {
