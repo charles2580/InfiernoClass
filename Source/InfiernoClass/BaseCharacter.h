@@ -28,7 +28,8 @@ enum class ECharacterState : uint8
 	NockDown,
 	Crunch,
 	Hit,
-	Block
+	Block,
+	Dead
 };
 
 UENUM(BlueprintType)
@@ -136,7 +137,7 @@ protected:
 		UAnimMontage* AirborneDamagedMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-		UAnimMontage* Combo1Montage;
+		UAnimMontage* WinMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
 		UAnimMontage* Combo2Montage;
@@ -205,6 +206,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
 		void UpdateHPUI(float HP);
 
+	UFUNCTION(BlueprintCallable, Category = "UI")
+		void PlayWinAnim();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Curve")
 		UCurveVector* InitialAirborneCurve;
 
@@ -219,6 +223,9 @@ public:
 
 	UPROPERTY(BluePrintReadOnly, Category = "CharacterIndex")
 		int CharacterIndex = 0;
+
+	UPROPERTY(BluePrintReadWrite, Category = "CharacterIndex")
+		float CurrentHP = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		TSubclassOf<ACameraActor> SideViewCamClass;
@@ -301,6 +308,5 @@ private:
 	void SetCharacterState(ECharacterState NewState);
 
 	float MaxHP = 100.0f;
-	float CurrentHP = 100.0f;
 
 };

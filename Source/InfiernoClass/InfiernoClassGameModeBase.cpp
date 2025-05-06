@@ -202,6 +202,7 @@ void AInfiernoClassGameModeBase::OnCharacterDead(ABaseCharacter* DeadCharacter)
         GI->Player2WinCount = 0;
         GI->GameRound = 0;
         FTimerHandle RestartHandle;
+      
         GetWorld()->GetTimerManager().SetTimer(RestartHandle, [this]()
             {
                 UGameplayStatics::OpenLevel(this, "Level1");

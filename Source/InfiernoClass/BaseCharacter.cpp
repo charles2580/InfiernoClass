@@ -32,7 +32,10 @@ void ABaseCharacter::BeginPlay()
 
     //StateManager->Initialize(this);
     //StateManager->ChangeState(UIdleState::StaticClass());
+    SetCharacterState(ECharacterState::Dead);
     animInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
+    //APlayerController* PC = Cast<APlayerController>(GetController());
+    //DisableInput(PC);
 }
 
 // Called every frame
@@ -228,6 +231,15 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
 ECharacterState ABaseCharacter::GetCharacterState() const
 {
     return CurrentState;
+}
+
+void ABaseCharacter::PlayWinAnim()
+{
+    if (!WinMontage)
+    {
+        return;
+    }
+    PlayAnimMontageSafe(WinMontage, false);
 }
 
 bool ABaseCharacter::AddInputToInputBuffer(FInputInfo _inputinfo)
@@ -511,18 +523,11 @@ void ABaseCharacter::SetCharacterState(ECharacterState NewState)
 
 void ABaseCharacter::PlayerDie()
 {
-    if (CurrentHP <= 0)
+    SetCharacterState(ECharacterState::Dead);
+    AInfiernoClassGameModeBase* GM = Cast<AInfiernoClassGameModeBase>(GetWorld()->GetAuthGameMode());
+    if (GM)
     {
-        APlayerController* PC = Cast<APlayerController>(GetController());
-        if (PC)
-        {
-            DisableInput(PC);
-        }
-        AInfiernoClassGameModeBase* GM = Cast<AInfiernoClassGameModeBase>(GetWorld()->GetAuthGameMode());
-        if (GM)
-        {
-            GM->OnCharacterDead(this);
-        }
+        GM->OnCharacterDead(this);
     }
 }
 
@@ -560,14 +565,16 @@ void ABaseCharacter::MoveAction(const FInputActionValue& Value)
 
 void ABaseCharacter::AttackAction(const FInputActionValue& Value)
 {
-    if (Value.Get<bool>())
-    {
-        PlayAnimMontage(Combo1Montage);
-    }
+
 }
 
 void ABaseCharacter::JumpAction(const FInputActionValue& Value)
 {
+    if (CurrentState == ECharacterState::Dead)
+    {
+        return;
+    }
+
     const FVector2D StickInput = Value.Get<FVector2D>();
     const float Deadzone = 0.2f;
     const float JumpThreshold = 0.7f;
@@ -811,6 +818,11 @@ void ABaseCharacter::LeftPunchAction(const FInputActionValue& Value)
         return;
     }
 
+    if (CurrentState == ECharacterState::Dead)
+    {
+        return;
+    }
+
     HandleInput(ECommandInput::A);
 }
 
@@ -821,12 +833,20 @@ void ABaseCharacter::RightPunchAction(const FInputActionValue& Value)
         return;
     }
 
+    if (CurrentState == ECharacterState::Dead)
+    {
+        return;
+    }
     HandleInput(ECommandInput::B);
 }
 
 void ABaseCharacter::LeftKickAction(const FInputActionValue& Value)
 {
     if (!Value.Get<bool>())
+    {
+        return;
+    }
+    if (CurrentState == ECharacterState::Dead)
     {
         return;
     }
@@ -840,6 +860,9 @@ void ABaseCharacter::RightKickAction(const FInputActionValue& Value)
     {
         return;
     }
-
+    if (CurrentState == ECharacterState::Dead)
+    {
+        return;
+    }
     HandleInput(ECommandInput::Y);
 }
