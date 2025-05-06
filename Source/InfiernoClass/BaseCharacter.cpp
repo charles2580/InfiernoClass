@@ -215,7 +215,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
         PlayAnimMontageSafe(MidDamagedMontage, false);
         break;
     case EAttackType::Low:
-        PlayAnimMontageSafe(LowDamagedMontage, true);
+        PlayAnimMontageSafe(LowDamagedMontage, false);
         break;
     default:
         break;
@@ -328,7 +328,8 @@ void ABaseCharacter::StartCommand(FString CommandName)
         }
         UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *CommandName);
         Command.hasUsedCommand = true;
-        PlayAnimSafe(Command.ComboAttackMontage);
+        CurrentState = ECharacterState::Attack;
+        PlayAnimMontageSafe(Command.ComboAttackMontage, false);
     }
 }
 
@@ -386,6 +387,11 @@ void ABaseCharacter::CancelPendingInput()
 void ABaseCharacter::ExecuteActionForInput(ECommandInput Input)
 {
     if (Input == ECommandInput::Forward || Input == ECommandInput::Backward || Input == ECommandInput::Jump ||Input == ECommandInput::Crunch)
+    {
+        return;
+    }
+
+    if (CurrentState == ECharacterState::Attack)
     {
         return;
     }
@@ -805,24 +811,12 @@ void ABaseCharacter::LeftPunchAction(const FInputActionValue& Value)
         return;
     }
 
-    if (CurrentState != ECharacterState::Idle &&
-        CurrentState != ECharacterState::Crunch)
-    {
-        return;
-    }
-
     HandleInput(ECommandInput::A);
 }
 
 void ABaseCharacter::RightPunchAction(const FInputActionValue& Value)
 {
     if (!Value.Get<bool>())
-    {
-        return;
-    }
-
-    if (CurrentState != ECharacterState::Idle &&
-        CurrentState != ECharacterState::Crunch)
     {
         return;
     }
@@ -836,13 +830,6 @@ void ABaseCharacter::LeftKickAction(const FInputActionValue& Value)
     {
         return;
     }
-
-    if (CurrentState != ECharacterState::Idle &&
-        CurrentState != ECharacterState::Crunch)
-    {
-        return;
-    }
-
     HandleInput(ECommandInput::X);
 
 }
@@ -850,12 +837,6 @@ void ABaseCharacter::LeftKickAction(const FInputActionValue& Value)
 void ABaseCharacter::RightKickAction(const FInputActionValue& Value)
 {
     if (!Value.Get<bool>())
-    {
-        return;
-    }
-
-    if (CurrentState != ECharacterState::Idle &&
-        CurrentState != ECharacterState::Crunch)
     {
         return;
     }
