@@ -182,11 +182,13 @@ void AInfiernoClassGameModeBase::OnCharacterDead(ABaseCharacter* DeadCharacter)
     if (DeadCharacter == Player1)
     {
         GI->Player2WinCount++;
+        Player2->PlayerWin();
         // HUD에 "Player 2 Wins!" 표시 등
     }
     else if (DeadCharacter == Player2)
     {
         GI->Player1WinCount++;
+        Player1->PlayerWin();
         // HUD에 "Player 1 Wins!" 표시 등
     }
 
@@ -206,7 +208,7 @@ void AInfiernoClassGameModeBase::OnCharacterDead(ABaseCharacter* DeadCharacter)
         GetWorld()->GetTimerManager().SetTimer(RestartHandle, [this]()
             {
                 UGameplayStatics::OpenLevel(this, "Level1");
-            }, 1.5f, false);
+            }, 3.0f, false);
     }
     else
     {
@@ -215,6 +217,6 @@ void AInfiernoClassGameModeBase::OnCharacterDead(ABaseCharacter* DeadCharacter)
         GetWorld()->GetTimerManager().SetTimer(RestartHandle, [this]()
             {
                 UGameplayStatics::OpenLevel(this, "PGY");
-            }, 1.5f, false);
+            }, 3.0f, false);
     }
 }

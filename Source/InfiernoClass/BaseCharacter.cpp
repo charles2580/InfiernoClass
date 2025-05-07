@@ -117,7 +117,7 @@ void ABaseCharacter::ClearWarpTarget(FName TargetName)
 
 bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCasuesAriborne)
 {
-    if (CurrentState == ECharacterState::NockDown || CurrentHP <= 0)
+    if (CurrentState == ECharacterState::NockDown || CurrentState == ECharacterState::Dead)
     {
         return false;
     }
@@ -242,6 +242,12 @@ void ABaseCharacter::PlayWinAnim()
     PlayAnimMontageSafe(WinMontage, false);
 }
 
+void ABaseCharacter::PlayerWin()
+{
+    SetCharacterState(ECharacterState::Dead);
+    PlayAnimMontageSafe(WinMontage, false);
+}
+
 bool ABaseCharacter::AddInputToInputBuffer(FInputInfo _inputinfo)
 {
     inputBuffer.Add(_inputinfo);
@@ -332,6 +338,10 @@ bool ABaseCharacter::CheckInputBufferForCommand()
 
 void ABaseCharacter::StartCommand(FString CommandName)
 {
+    if (CurrentState == ECharacterState::Attack)
+    {
+        return;
+    }
     for (FCommand& Command : characterCommands)
     {
         if (!CommandName.Equals(Command.name))
@@ -528,6 +538,7 @@ void ABaseCharacter::PlayerDie()
     if (GM)
     {
         GM->OnCharacterDead(this);
+        PlayAnimMontageSafe(DeadMontage, false);
     }
 }
 

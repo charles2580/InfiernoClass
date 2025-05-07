@@ -140,7 +140,7 @@ protected:
 		UAnimMontage* WinMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animaiton")
-		UAnimMontage* Combo2Montage;
+		UAnimMontage* DeadMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Motion Warping")
 		class UMotionWarpingComponent* MotionWarpingComponent;
@@ -229,6 +229,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		TSubclassOf<ACameraActor> SideViewCamClass;
+
+	UFUNCTION(BlueprintCallable)
+		void PlayerWin();
 
 protected:
 
