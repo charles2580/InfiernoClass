@@ -233,6 +233,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void PlayerWin();
 
+	UFUNCTION(BlueprintCallable)
+	void ApplyHitStop(float Duration);
+
 protected:
 
 	UFUNCTION(BlueprintCallable)
@@ -309,6 +312,9 @@ private:
 	void PlayRootMotionAirborne(float Distance, float Height, float Duration, bool bIsChainHit);
 
 	void SetCharacterState(ECharacterState NewState);
+
+	void RestoreTimeAfterHitStop();
+
 
 	float MaxHP = 100.0f;
 

@@ -9,7 +9,7 @@ void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 	{
 		return;
 	}
-	AActor* Owner = MeshComp->GetOwner();
+	ABaseCharacter* Owner = Cast<ABaseCharacter>(MeshComp->GetOwner());
 	FVector Start = MeshComp->GetSocketLocation(SocketName);
 	FVector End = Start + Owner->GetActorForwardVector()*AttackRange;
 	float CapsuleHalfHeight = (End - Start).Size() * 0.5f;
@@ -49,6 +49,7 @@ void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 					bool bHitSuccessful = Target->ApplyDamage(Damage, AttackType, isAirborneAttack);
 					if (bHitSuccessful)
 					{
+						Owner->ApplyHitStop(0.1f);
 						FVector SpawnLoc = Start;
 						UNiagaraFunctionLibrary::SpawnSystemAtLocation(MeshComp->GetWorld(), AttackEffect, SpawnLoc);
 						UE_LOG(LogTemp, Warning, TEXT("Attack Effect Spawn Success"));

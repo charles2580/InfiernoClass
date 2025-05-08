@@ -187,7 +187,8 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
     }
     
     CurrentHP -= Damage;
-
+    ApplyHitStop(0.1f);
+    
     if (CurrentState == ECharacterState::Airbone)
     {
         if (airbornegauge > 0)
@@ -385,7 +386,7 @@ void ABaseCharacter::StartPendingInput(ECommandInput Input)
     GetWorld()->GetTimerManager().ClearTimer(InputConfirmHandle);
 
     GetWorld()->GetTimerManager().SetTimer(InputConfirmHandle, this,
-        &ABaseCharacter::PendingInput, 0.05f, false);
+        &ABaseCharacter::PendingInput, 0.07f, false);
 
 }
 
@@ -529,6 +530,20 @@ void ABaseCharacter::SetCharacterState(ECharacterState NewState)
     CurrentState = NewState;
 
     UE_LOG(LogTemp, Log, TEXT("change sate to %s"), *UEnum::GetValueAsString(NewState));
+}
+
+void ABaseCharacter::ApplyHitStop(float Duration)
+{
+    CustomTimeDilation = 0.0f;
+
+    // 타이머로 시간 복구
+    FTimerHandle HitStopTimer;
+    GetWorldTimerManager().SetTimer(HitStopTimer, this, &ABaseCharacter::RestoreTimeAfterHitStop, Duration, false);
+}
+
+void ABaseCharacter::RestoreTimeAfterHitStop()
+{
+    CustomTimeDilation = 1.0f;
 }
 
 void ABaseCharacter::PlayerDie()
