@@ -49,7 +49,7 @@ void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 					bool bHitSuccessful = Target->ApplyDamage(Damage, AttackType, isAirborneAttack);
 					if (bHitSuccessful && Owner)
 					{
-						Cast<ABaseCharacter>(Owner)->ApplyHitStop(0.1f);
+						Cast<ABaseCharacter>(Owner)->ApplyHitStop(0.03f);
 						FVector SpawnLoc = Start;
 						UNiagaraFunctionLibrary::SpawnSystemAtLocation(MeshComp->GetWorld(), AttackEffect, SpawnLoc);
 						UE_LOG(LogTemp, Warning, TEXT("Attack Effect Spawn Success"));

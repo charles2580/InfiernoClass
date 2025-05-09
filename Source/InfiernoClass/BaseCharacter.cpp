@@ -187,7 +187,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
     }
     
     CurrentHP -= Damage;
-    ApplyHitStop(0.1f);
+    ApplyHitStop(0.03f);
     
     if (CurrentState == ECharacterState::Airbone)
     {
