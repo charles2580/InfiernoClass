@@ -149,7 +149,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
     // === 중단 공격 처리 ===
     if (AttackType == EAttackType::Mid)
     {
-        if (LastHorizontalInput == ECommandInput::Backward)
+        if (LastHorizontalInput == ECommandInput::Backward || CurrentState == ECharacterState::Idle)
         {
             SetCharacterState(ECharacterState::Block);
             SpawnSocketName = HitEffectSocket_Mid;
