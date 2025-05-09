@@ -350,6 +350,7 @@ void ABaseCharacter::StartCommand(FString CommandName)
             continue;
         }
         UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *CommandName);
+        CancelPendingInput();
         Command.hasUsedCommand = true;
         CurrentState = ECharacterState::Attack;
         PlayAnimMontageSafe(Command.ComboAttackMontage, false);
