@@ -204,12 +204,13 @@ void AInfiernoClassGameModeBase::OnCharacterDead(ABaseCharacter* DeadCharacter)
         GI->Player2WinCount = 0;
         GI->GameRound = 0;
         FTimerHandle RestartHandle;
-      
+        InitializeWinUI();
         GetWorld()->GetTimerManager().SetTimer(RestartHandle, [this]()
             {
                 UGameplayStatics::OpenLevel(this, "Level1");
-            }, 3.0f, false);
+            }, 5.0f, false);
     }
+
     else
     {
         // 다음 라운드 시작을 위해 레벨 재시작

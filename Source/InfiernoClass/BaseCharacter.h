@@ -230,6 +230,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		TSubclassOf<ACameraActor> SideViewCamClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+		USoundBase* BlockSound;
+
 	UFUNCTION(BlueprintCallable)
 		void PlayerWin();
 

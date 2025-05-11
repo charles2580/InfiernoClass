@@ -141,6 +141,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
                 UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, SpawnLoc);
             }
             PlayAnimMontageSafe(HighBlockMontage, false);
+            UGameplayStatics::PlaySoundAtLocation(this, BlockSound, GetActorLocation());
             UE_LOG(LogTemp, Log, TEXT("%s blocked high attack!"), *GetName());
             return false; // 블로킹 성공
         }
@@ -159,6 +160,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
                 UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, SpawnLoc);
             }
             PlayAnimMontageSafe(MidBlockMontage, false);
+            UGameplayStatics::PlaySoundAtLocation(this, BlockSound, GetActorLocation());
             UE_LOG(LogTemp, Log, TEXT("%s blocked mid attack!"), *GetName());
             return false; // 블로킹 성공
         }
@@ -182,6 +184,7 @@ bool ABaseCharacter::ApplyDamage(float Damage, EAttackType AttackType, bool bCas
                 UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, SpawnLoc);
             }
             PlayAnimMontageSafe(LowBlockMontage, true);
+            UGameplayStatics::PlaySoundAtLocation(this, BlockSound, GetActorLocation());
             return false;
         }
     }

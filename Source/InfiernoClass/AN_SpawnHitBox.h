@@ -39,5 +39,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Animation")
 		UNiagaraSystem* AttackEffect;
 
+	UPROPERTY(EditAnyWhere, Category = "Sound")
+		USoundBase* AttackSound;
+
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };

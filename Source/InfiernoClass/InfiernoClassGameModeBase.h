@@ -31,4 +31,7 @@ public:
 	ABaseCharacter* Player2;
 
 	void OnCharacterDead(ABaseCharacter* DeadCharacter);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+		void InitializeWinUI();
 };

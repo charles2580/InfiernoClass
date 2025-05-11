@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AN_SpawnHitBox.h"
+#include "Kismet/GameplayStatics.h"
+
 
 void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
@@ -50,6 +51,10 @@ void UAN_SpawnHitBox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 					if (bHitSuccessful && Owner)
 					{
 						Cast<ABaseCharacter>(Owner)->ApplyHitStop(0.03f);
+						if (AttackSound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(this, AttackSound, Owner->GetActorLocation());
+						}
 						FVector SpawnLoc = Start;
 						UNiagaraFunctionLibrary::SpawnSystemAtLocation(MeshComp->GetWorld(), AttackEffect, SpawnLoc);
 						UE_LOG(LogTemp, Warning, TEXT("Attack Effect Spawn Success"));
