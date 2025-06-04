@@ -134,7 +134,7 @@ void AInfiernoClassGameModeBase::StartPlay()
         FRotator SpawnRotation1(0.0f, 180.0f, 0.0f);
         FTransform SpawnTransform1(SpawnRotation1, SpawnLocation1, FVector(1.0f));
 
-        ABaseCharacter* Pawn1 = World->SpawnActorDeferred<ABaseCharacter>(BullPawnClass, SpawnTransform1);
+        ABaseCharacter* Pawn1 = World->SpawnActorDeferred<ABaseCharacter>(MonkeyPawnClass, SpawnTransform1);
         if (Pawn1)
         {
             Pawn1->AutoPossessPlayer = EAutoReceiveInput::Player1;
