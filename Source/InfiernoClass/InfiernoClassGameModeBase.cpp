@@ -35,15 +35,15 @@ void AInfiernoClassGameModeBase::StartPlay()
         return;
     }
 
-    TSubclassOf<ABaseCharacter> SelectedPawnClass = nullptr;
-    if (GI->characterClass == ECharacterClass::Monkey)
+    TSubclassOf<ABaseCharacter> Player1SelectedPawn = nullptr;
+    if (GI->Player1CharacterClass == ECharacterClass::Monkey)
     {
-        SelectedPawnClass = MonkeyPawnClass;
+        Player1SelectedPawn = MonkeyPawnClass;
         UE_LOG(LogTemp, Log, TEXT("Selected Character Class: Monkey"));
     }
-    else if (GI->characterClass == ECharacterClass::Bull)
+    else if (GI->Player1CharacterClass == ECharacterClass::Bull)
     {
-        SelectedPawnClass = BullPawnClass;
+        Player1SelectedPawn = BullPawnClass;
         UE_LOG(LogTemp, Log, TEXT("Selected Character Class: Bull"));
     }
     else
@@ -52,7 +52,7 @@ void AInfiernoClassGameModeBase::StartPlay()
         return;
     }
 
-    if (!SelectedPawnClass)
+    if (!Player1SelectedPawn)
     {
         UE_LOG(LogTemp, Log, TEXT("There is No SelectedCharacterClass"));
         return;
@@ -66,7 +66,7 @@ void AInfiernoClassGameModeBase::StartPlay()
         FRotator SpawnRotation0 = FRotator::ZeroRotator;
         FTransform SpawnTransform0(SpawnRotation0, SpawnLocation0, FVector(1.0f));
 
-        ABaseCharacter* Pawn0 = World->SpawnActorDeferred<ABaseCharacter>(SelectedPawnClass, SpawnTransform0);
+        ABaseCharacter* Pawn0 = World->SpawnActorDeferred<ABaseCharacter>(Player1SelectedPawn, SpawnTransform0);
         if (Pawn0)
         {
             Pawn0->AutoPossessPlayer = EAutoReceiveInput::Player0;
@@ -128,13 +128,35 @@ void AInfiernoClassGameModeBase::StartPlay()
         }
     }
 
+    TSubclassOf<ABaseCharacter> Player2SelectedPawn = nullptr;
+    if (GI->Player2CharacterClass == ECharacterClass::Monkey)
+    {
+        Player2SelectedPawn = MonkeyPawnClass;
+        UE_LOG(LogTemp, Log, TEXT("Selected Character Class: Monkey"));
+    }
+    else if (GI->Player2CharacterClass == ECharacterClass::Bull)
+    {
+        Player2SelectedPawn = BullPawnClass;
+        UE_LOG(LogTemp, Log, TEXT("Selected Character Class: Bull"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Non Defined Character"));
+        return;
+    }
+
+    if (!Player2SelectedPawn)
+    {
+        UE_LOG(LogTemp, Log, TEXT("There is No SelectedCharacterClass"));
+        return;
+    }
     if (PC1)
     {
         FVector SpawnLocation1(200.f, 0.f, 100.f); // 두 번째 Pawn의 위치
         FRotator SpawnRotation1(0.0f, 180.0f, 0.0f);
         FTransform SpawnTransform1(SpawnRotation1, SpawnLocation1, FVector(1.0f));
 
-        ABaseCharacter* Pawn1 = World->SpawnActorDeferred<ABaseCharacter>(MonkeyPawnClass, SpawnTransform1);
+        ABaseCharacter* Pawn1 = World->SpawnActorDeferred<ABaseCharacter>(Player2SelectedPawn, SpawnTransform1);
         if (Pawn1)
         {
             Pawn1->AutoPossessPlayer = EAutoReceiveInput::Player1;
